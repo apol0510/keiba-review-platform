@@ -49,9 +49,75 @@ AIRTABLE_BASE_ID=app...  # Airtable Base ID
 | IsSpam | Checkbox |
 | CreatedAt | Created time |
 
+## 最近の更新 (2025-11-25)
+
+### デザイン刷新 - モダンUI実装完了 ✅
+トップページ（`src/pages/index.astro`）とヘッダー（`src/layouts/BaseLayout.astro`）を現代風のデザインに全面刷新。
+
+#### 1. ヒーローセクション
+- ✅ ダークグラデーション背景（slate-900 → blue-900）
+- ✅ ブラーエフェクトを使った抽象的な背景パターン
+- ✅ アニメーション付きバッジ（緑の点滅）
+- ✅ グラデーションテキスト（white → blue-300 → purple-300）
+- ✅ ガラスモーフィズム検索バー（backdrop-blur）
+- ✅ クイックリンク（カテゴリへの素早いアクセス）
+- ✅ モバイルファースト対応（レスポンシブデザイン）
+
+#### 2. Stats Section
+- ✅ グラデーション背景（slate-50 → white）
+- ✅ カード型デザイン（白背景、シャドウ、ホバーエフェクト）
+- ✅ グラデーションテキスト（blue-600 → purple-600）
+
+#### 3. Popular Sites Section
+- ✅ セクション説明文を追加
+- ✅ 「すべて見る」リンクにアイコンとホバーアニメーション
+- ✅ ランキングバッジをグラデーションに変更
+
+#### 4. Latest Reviews Section
+- ✅ グラデーション背景
+- ✅ セクション説明文を追加
+
+#### 5. Category Section
+- ✅ カードをグラデーション背景に（white → slate-50）
+- ✅ ホバー時に上に浮き上がるアニメーション
+- ✅ アイコンがホバー時に拡大
+
+#### 6. CTA Section
+- ✅ ヒーローセクションと同じスタイル（グラデーション背景）
+- ✅ ガラスモーフィズムカード
+- ✅ 背景パターン追加
+- ✅ ボタンに矢印アイコン追加
+
+#### 7. ヘッダーメニュー
+- ✅ ガラスモーフィズム効果（bg-white/95 backdrop-blur-md）
+- ✅ グラデーションアイコン（星マーク）を追加
+- ✅ ロゴテキストをブランドカラーのグラデーションに変更
+- ✅ ナビゲーションを囲んだピルボタンスタイル（bg-slate-100）
+- ✅ メニュー項目間に区切り線を追加
+
+### デザインシステム
+- **メインカラー**: Blue-600 → Purple-600 グラデーション
+- **背景**: Slate-900/Blue-900（ダークセクション）、White/Slate-50（ライトセクション）
+- **エフェクト**: Backdrop-blur、Box-shadow、Transform animations
+- **レスポンシブ**: モバイルファースト設計
+
 ## 次回作業 (TODO)
 
-### 1. Airtable API設定
+### 1. フッターのデザイン改善
+- [ ] フッターをモダンなデザインに刷新
+- [ ] ヘッダーとの統一感を持たせる
+
+### 2. SiteCard / ReviewCard コンポーネントの改善
+- [ ] カードデザインを新しいUIに合わせる
+- [ ] ホバーエフェクトの追加
+
+### 3. 他のページのデザイン刷新
+- [ ] サイト一覧ページ（`/keiba-yosou/`）
+- [ ] カテゴリページ（`/keiba-yosou/[category]/`）
+- [ ] サイト詳細ページ（`/keiba-yosou/[slug]/`）
+- [ ] 管理画面
+
+### 4. Airtable API設定
 - [ ] https://airtable.com/create/tokens でトークン作成
   - Scopes: `data.records:read`, `data.records:write`
   - Access: 作成したbaseを選択
@@ -59,13 +125,13 @@ AIRTABLE_BASE_ID=app...  # Airtable Base ID
 - [ ] Netlify環境変数に設定
 - [ ] 再デプロイ
 
-### 2. Make.com 自動化設定
+### 5. Make.com 自動化設定
 - [ ] シナリオ作成: Airtable Watch Records → SendGrid Send Email
   - トリガー: Reviews テーブルに新規レコード追加
   - アクション: 管理者にメール通知
 - [ ] スケジュール設定（15分ごと推奨）
 
-### 3. テストデータ投入
+### 6. テストデータ投入
 - [ ] Airtableに2-3件のサイトを手動追加
 - [ ] 本番サイトで表示確認
 

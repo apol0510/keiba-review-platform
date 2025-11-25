@@ -61,30 +61,40 @@ const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`
   </head>
   <body class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-      <div class="max-w-6xl mx-auto px-4 py-4">
+    <header class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 py-3 md:py-4">
         <div class="flex items-center justify-between">
-          <a href="/" class="text-xl font-bold text-gray-900 hover:text-gray-700">
-            競馬予想サイト口コミ
+          <a href="/" class="flex items-center gap-2 group">
+            <div class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+              <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+              </svg>
+            </div>
+            <span class="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent transition-all">
+              競馬予想サイト口コミ
+            </span>
           </a>
-          <nav class="hidden md:flex items-center space-x-6">
-            <a href="/keiba-yosou/" class="text-gray-600 hover:text-gray-900">
+          <nav class="hidden md:flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+            <a href="/keiba-yosou/" class="px-4 py-2 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md transition-all">
               サイト一覧
             </a>
-            <a href="/keiba-yosou/nankan/" class="text-gray-600 hover:text-gray-900">
+            <div class="w-px h-5 bg-slate-300"></div>
+            <a href="/keiba-yosou/nankan/" class="px-4 py-2 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md transition-all">
               NANKAN
             </a>
-            <a href="/keiba-yosou/chuo/" class="text-gray-600 hover:text-gray-900">
+            <div class="w-px h-5 bg-slate-300"></div>
+            <a href="/keiba-yosou/chuo/" class="px-4 py-2 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md transition-all">
               中央競馬
             </a>
-            <a href="/keiba-yosou/chihou/" class="text-gray-600 hover:text-gray-900">
+            <div class="w-px h-5 bg-slate-300"></div>
+            <a href="/keiba-yosou/chihou/" class="px-4 py-2 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-white rounded-md transition-all">
               地方競馬
             </a>
           </nav>
           <!-- Mobile menu button -->
           <button
             type="button"
-            class="md:hidden p-2 text-gray-600"
+            class="md:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
             id="mobile-menu-button"
             aria-label="メニュー"
           >
@@ -103,18 +113,18 @@ const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`
           </button>
         </div>
         <!-- Mobile menu -->
-        <nav class="hidden md:hidden mt-4 pb-2" id="mobile-menu">
-          <div class="flex flex-col space-y-2">
-            <a href="/keiba-yosou/" class="text-gray-600 hover:text-gray-900 py-2">
+        <nav class="hidden md:hidden mt-3 pt-3 border-t border-slate-200" id="mobile-menu">
+          <div class="flex flex-col gap-1">
+            <a href="/keiba-yosou/" class="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
               サイト一覧
             </a>
-            <a href="/keiba-yosou/nankan/" class="text-gray-600 hover:text-gray-900 py-2">
+            <a href="/keiba-yosou/nankan/" class="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
               NANKAN
             </a>
-            <a href="/keiba-yosou/chuo/" class="text-gray-600 hover:text-gray-900 py-2">
+            <a href="/keiba-yosou/chuo/" class="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
               中央競馬
             </a>
-            <a href="/keiba-yosou/chihou/" class="text-gray-600 hover:text-gray-900 py-2">
+            <a href="/keiba-yosou/chihou/" class="px-4 py-2.5 text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
               地方競馬
             </a>
           </div>
