@@ -326,7 +326,7 @@ export async function getReviewsBySiteId(siteId: string): Promise<Review[]> {
 
     const records = await base('Reviews')
       .select({
-        filterByFormula: `AND(FIND('${siteId}', ARRAYJOIN({Site})), {IsApproved} = TRUE(), {IsSpam} = FALSE())`,
+        filterByFormula: `AND(FIND('${siteId}', ARRAYJOIN({Site})), {IsApproved} = TRUE())`,
         sort: [{ field: 'CreatedAt', direction: 'desc' }],
       })
       .all();
@@ -358,7 +358,7 @@ export async function getLatestReviews(limit: number = 10): Promise<ReviewWithSi
 
     const records = await base('Reviews')
       .select({
-        filterByFormula: `AND({IsApproved} = TRUE(), {IsSpam} = FALSE())`,
+        filterByFormula: `{IsApproved} = TRUE()`,
         sort: [{ field: 'CreatedAt', direction: 'desc' }],
         maxRecords: limit,
       })
