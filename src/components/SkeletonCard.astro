@@ -1,0 +1,51 @@
+---
+// スケルトンカード - ローディング中のプレースホルダー
+---
+
+<div class="bg-white rounded-lg shadow-md p-6 animate-pulse">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-4">
+    <div class="h-4 bg-slate-200 rounded w-20"></div>
+    <div class="h-4 bg-slate-200 rounded w-16"></div>
+  </div>
+
+  <!-- Title -->
+  <div class="h-6 bg-slate-200 rounded w-3/4 mb-3"></div>
+
+  <!-- Description -->
+  <div class="space-y-2 mb-4">
+    <div class="h-3 bg-slate-200 rounded w-full"></div>
+    <div class="h-3 bg-slate-200 rounded w-5/6"></div>
+  </div>
+
+  <!-- Tags -->
+  <div class="flex gap-2 mb-4">
+    <div class="h-6 bg-slate-200 rounded-full w-16"></div>
+    <div class="h-6 bg-slate-200 rounded-full w-20"></div>
+    <div class="h-6 bg-slate-200 rounded-full w-24"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+    <div class="flex items-center gap-2">
+      <div class="h-5 bg-slate-200 rounded w-24"></div>
+    </div>
+    <div class="h-4 bg-slate-200 rounded w-16"></div>
+  </div>
+</div>
+
+<style>
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>

@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="サーバーエラー"
+  description="サーバーでエラーが発生しました。しばらく時間をおいてから再度お試しください。"
+>
+  <div class="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-16">
+    <div class="max-w-2xl mx-auto text-center">
+      <!-- Error Code -->
+      <div class="mb-8">
+        <h1 class="text-8xl md:text-9xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+          500
+        </h1>
+      </div>
+
+      <!-- Icon -->
+      <div class="mb-8">
+        <svg class="w-24 h-24 md:w-32 md:h-32 mx-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+
+      <!-- Message -->
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+        サーバーエラーが発生しました
+      </h2>
+      <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+        申し訳ございません。サーバーで予期しないエラーが発生しました。<br class="hidden sm:block" />
+        しばらく時間をおいてから再度お試しください。
+      </p>
+
+      <!-- Error Details (Optional) -->
+      <div class="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-left">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <h3 class="font-semibold text-red-900 mb-1">考えられる原因</h3>
+            <ul class="text-sm text-red-700 space-y-1">
+              <li>• サーバーのメンテナンス中</li>
+              <li>• データベース接続エラー</li>
+              <li>• 一時的な過負荷状態</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          onclick="window.location.reload()"
+          class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          ページを再読み込み
+        </button>
+        <a
+          href="/"
+          class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border-2 border-gray-300 hover:border-red-600 hover:text-red-600 transition-all duration-200"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          トップページへ
+        </a>
+      </div>
+
+      <!-- Help Section -->
+      <div class="mt-12 p-6 bg-slate-50 rounded-lg">
+        <h3 class="font-semibold text-gray-900 mb-2">問題が解決しない場合</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          エラーが継続する場合は、お手数ですがお問い合わせフォームからご連絡ください。<br />
+          可能であれば、エラーが発生した時刻と操作内容をお知らせいただけると助かります。
+        </p>
+        <a
+          href="/contact/"
+          class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+        >
+          お問い合わせ
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Status Check Link (Optional) -->
+      <div class="mt-8">
+        <p class="text-xs text-gray-500">
+          サービスの稼働状況を確認:
+          <a href="/" class="text-blue-600 hover:underline ml-1">ステータスページ</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
