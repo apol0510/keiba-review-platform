@@ -11,9 +11,33 @@ const latestReviews = await getLatestReviews(6);
 // カテゴリ別にサイトをグループ化
 const categories = ['nankan', 'chuo', 'chihou'] as const;
 const topSites = sites.slice(0, 10);
+
+// 構造化データ
+const siteUrl = import.meta.env.SITE_URL || 'https://keiba-review.com';
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: '競馬予想サイト口コミ',
+  url: siteUrl,
+  description: '競馬予想サイトの口コミ・評判を集約。ユーザーの生の声で信頼できるサイトを見つけよう。',
+  publisher: {
+    '@type': 'Organization',
+    name: '競馬予想サイト口コミ',
+    url: siteUrl,
+  },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${siteUrl}/keiba-yosou/?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
 ---
 
 <BaseLayout title="トップ">
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   <!-- Hero Section -->
   <section class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white py-16 md:py-24 overflow-hidden">
     <!-- Background Pattern -->

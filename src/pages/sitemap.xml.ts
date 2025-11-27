@@ -14,6 +14,10 @@ export const GET: APIRoute = async () => {
     { url: '/keiba-yosou/nankan/', priority: '0.8', changefreq: 'daily' },
     { url: '/keiba-yosou/chuo/', priority: '0.8', changefreq: 'daily' },
     { url: '/keiba-yosou/chihou/', priority: '0.8', changefreq: 'daily' },
+    { url: '/about/', priority: '0.5', changefreq: 'monthly' },
+    { url: '/terms/', priority: '0.3', changefreq: 'yearly' },
+    { url: '/privacy/', priority: '0.3', changefreq: 'yearly' },
+    { url: '/contact/', priority: '0.5', changefreq: 'monthly' },
   ];
 
   // XMLを生成

@@ -29,5 +29,16 @@ export default defineConfig({
   // ビルド最適化
   build: {
     inlineStylesheets: 'auto',
+    // アセットのインライン化閾値（4KB以下のものはインライン化）
+    assetsInlineLimit: 4096,
+  },
+  // 画像最適化
+  image: {
+    domains: ['fonts.googleapis.com', 'fonts.gstatic.com'],
+  },
+  // プリフェッチ設定
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover',
   },
 });
