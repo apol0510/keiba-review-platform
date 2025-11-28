@@ -107,9 +107,29 @@ const EXCLUDED_PATTERNS = [
   'detail.chiebukuro.yahoo.co.jp',
   'sports.yahoo.co.jp', // Yahoo!スポーツの個別記事
 
+  // 公式サイト（JRA、NAR、競馬場）
+  'jra.go.jp',
+  'keiba.go.jp',  // NAR
+  'nankankeiba.com',
+  'urawa-keiba.jp',
+  'kawasaki-keiba.jp',
+  'funabashi-keiba.jp',
+  'f-keiba.com',  // 船橋競馬場
+  'oi-keiba.jp',
+  'tokyocitykeiba.com',  // 大井競馬場
+  'sonoda-himeji.jp',
+  'kanazawakeiba.com',
+  'nagoyakeiba.com',
+  'kochi-keiba.com',
+  'sagakeiba.net',
+
   // 競馬場公式・レース情報ページ（予想サイトではない）
   'netkeiba.com/racecourse',
   'nar.netkeiba.com/racecourse',
+
+  // データベース・レース情報
+  'jbis.or.jp',  // JBISサーチ
+  'keibalab.jp',  // 競馬ラボ（レース一覧のみ）
 
   // 投票サイト（馬券購入サービス）
   'oddspark.com',

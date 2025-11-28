@@ -33,7 +33,9 @@ const EXCLUDE_URL_PATTERNS = [
   'urawa-keiba.jp',
   'kawasaki-keiba.jp',
   'funabashi-keiba.jp',
+  'f-keiba.com',          // 船橋競馬場
   'oi-keiba.jp',
+  'tokyocitykeiba.com',   // 大井競馬場
   'sonoda-himeji.jp',
   'kanazawakeiba.com',
   'nagoyakeiba.com',
