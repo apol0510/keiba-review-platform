@@ -58,7 +58,22 @@ const totalReviews = sites.reduce((sum, s) => sum + s.review_count, 0);
             <li>IsApproved が空のレコードを確認</li>
             <li>内容を確認し、問題なければ IsApproved にチェック</li>
             <li>スパムの場合は IsSpam にチェック</li>
+            <li>⭐️ 料金情報の提案があれば確認（SuggestedPricingType, SuggestedHasFreeTrial, SuggestedRegistrationRequired）</li>
           </ol>
+        </div>
+
+        <div>
+          <h3 class="font-medium text-gray-900 mb-2">料金情報の更新（口コミからの提案）</h3>
+          <ol class="text-sm text-gray-600 list-decimal list-inside space-y-1">
+            <li>「Reviews」テーブルで SuggestedPricingType が入力されているレコードを確認</li>
+            <li>提案内容が正しいか判断</li>
+            <li>「Sites」テーブルで該当サイトを開く</li>
+            <li>PricingType, HasFreeTrial, RegistrationRequired を手動で更新</li>
+            <li>複数の提案がある場合は、より信頼性の高い情報を採用</li>
+          </ol>
+          <p class="text-xs text-gray-500 mt-2">
+            💡 ヒント: Reviewsテーブルをフィルタリング（SuggestedPricingType is not empty）すると、料金提案のある口コミだけを表示できます
+          </p>
         </div>
 
         <div>

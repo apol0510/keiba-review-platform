@@ -59,6 +59,11 @@ export const reviewSchema = z.object({
   support_rating: z.number().min(1).max(5).optional(),
   transparency_rating: z.number().min(1).max(5).optional(),
 
+  // 料金情報更新（任意）
+  pricing_type: z.enum(['free', 'partially_paid', 'fully_paid', '']).optional(),
+  has_free_trial: z.boolean().optional(),
+  registration_required: z.boolean().optional(),
+
   // 利用規約同意
   agree_terms: z.literal(true, {
     errorMap: () => ({ message: '利用規約に同意してください' }),

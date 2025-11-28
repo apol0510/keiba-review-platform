@@ -101,6 +101,10 @@ export default function ReviewForm({ siteId, siteName, recaptchaSiteKey }: Props
         rating: data.rating,
         title: data.title,
         content: data.content,
+        // 料金情報（任意）
+        pricing_type: data.pricing_type,
+        has_free_trial: data.has_free_trial,
+        registration_required: data.registration_required,
       });
 
       setSubmitSuccess(true);
@@ -232,6 +236,54 @@ export default function ReviewForm({ siteId, siteName, recaptchaSiteKey }: Props
         />
         {errors.content && <p className="form-error">{errors.content.message}</p>}
       </div>
+
+      {/* Pricing Info Update (Optional) */}
+      <details className="border border-gray-200 rounded-lg">
+        <summary className="px-4 py-2 cursor-pointer text-sm text-gray-600 hover:bg-gray-50">
+          料金情報を更新する（任意）
+        </summary>
+        <div className="p-4 space-y-3 border-t">
+          <p className="text-xs text-gray-600 mb-3">
+            実際に利用してわかった料金情報があれば教えてください。
+          </p>
+
+          <div>
+            <label htmlFor="pricing_type" className="block text-sm font-medium text-gray-700 mb-1">
+              料金体系
+            </label>
+            <select
+              id="pricing_type"
+              {...register('pricing_type')}
+              className="form-input text-sm"
+            >
+              <option value="">選択しない</option>
+              <option value="free">完全無料</option>
+              <option value="partially_paid">一部有料プランあり</option>
+              <option value="fully_paid">有料サービス</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                {...register('has_free_trial')}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">無料お試しあり</span>
+            </label>
+
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                {...register('registration_required')}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">会員登録が必要</span>
+            </label>
+          </div>
+        </div>
+      </details>
 
       {/* Detailed Ratings (Optional) */}
       <details className="border border-gray-200 rounded-lg">

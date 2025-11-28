@@ -513,6 +513,10 @@ export async function submitReview(review: {
   content: string;
   ip_address?: string;
   user_agent?: string;
+  // 料金情報更新（任意）
+  pricing_type?: 'free' | 'partially_paid' | 'fully_paid' | '';
+  has_free_trial?: boolean;
+  registration_required?: boolean;
 }): Promise<Review> {
   const { isDemoMode } = getAirtableConfig();
 
@@ -530,6 +534,8 @@ export async function submitReview(review: {
       is_spam: false,
       created_at: new Date().toISOString(),
       approved_at: null,
+      helpful_count: 0,
+      verified_user: false,
     };
   }
 
@@ -537,7 +543,7 @@ export async function submitReview(review: {
     const base = getBase();
     if (!base) throw new Error('Airtable base not initialized');
 
-    const record = await base('Reviews').create({
+    const recordData: any = {
       Site: [review.site_id],  // "Site" フィールド（リンクフィールド）
       UserName: review.user_name,
       UserEmail: review.user_email,
@@ -546,7 +552,20 @@ export async function submitReview(review: {
       Content: review.content,
       IsApproved: false,
       IsSpam: false,
-    });
+    };
+
+    // 料金情報が提供されている場合は追加
+    if (review.pricing_type && review.pricing_type !== '') {
+      recordData.SuggestedPricingType = review.pricing_type;
+    }
+    if (review.has_free_trial !== undefined) {
+      recordData.SuggestedHasFreeTrial = review.has_free_trial;
+    }
+    if (review.registration_required !== undefined) {
+      recordData.SuggestedRegistrationRequired = review.registration_required;
+    }
+
+    const record = await base('Reviews').create(recordData);
 
     return recordToReview(record);
   } catch (error) {

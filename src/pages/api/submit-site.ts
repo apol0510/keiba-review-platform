@@ -100,6 +100,10 @@ export const POST: APIRoute = async ({ request }) => {
         IsApproved: false, // 未承認状態で登録
         SubmitterName: data.submitter_name,
         SubmitterEmail: data.submitter_email,
+        // 料金情報（任意）
+        PricingType: data.pricing_type || 'unknown',
+        HasFreeTrial: data.has_free_trial || false,
+        RegistrationRequired: data.registration_required || false,
       }
     };
     console.log('Record data:', JSON.stringify(recordData, null, 2));
