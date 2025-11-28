@@ -200,13 +200,51 @@ async function searchMultiplePages(query, maxPages = 3) {
 }
 
 /**
+ * サイト名をクリーニング
+ */
+function cleanSiteName(title) {
+  let name = title;
+
+  // 不要な接尾辞を削除
+  const suffixes = [
+    / \| netkeiba.*/i,
+    / - netkeiba.*/i,
+    / \| 競馬.*/,
+    / - 競馬.*/,
+    / \| .*/,
+    / - .*/,
+    /【.*】/g,
+    /「.*」/g,
+    /\.{3,}$/,  // 末尾の...
+    / -$/,
+    / \|$/,
+  ];
+
+  for (const suffix of suffixes) {
+    name = name.replace(suffix, '');
+  }
+
+  // トリム
+  name = name.trim();
+
+  // 空の場合はドメイン名を使う
+  if (!name) {
+    name = 'サイト名未取得';
+  }
+
+  return name;
+}
+
+/**
  * URLからサイト情報を抽出
  */
 function extractSiteInfo(result) {
   try {
     const url = new URL(result.link);
     const domain = url.hostname.replace(/^www\./, '');
-    const name = result.title;
+
+    // サイト名をクリーニング
+    const name = cleanSiteName(result.title);
     const description = result.snippet || '';
 
     // スラッグを生成（ドメイン名から）
@@ -226,7 +264,7 @@ function extractSiteInfo(result) {
     return {
       Name: name.substring(0, 100), // Airtableの制限に合わせる
       Slug: slug,
-      URL: result.link,
+      URL: url.origin + url.pathname, // クエリパラメータを除去
       Category: category,
       Description: description.substring(0, 500),
       IsApproved: false, // デフォルトは未承認
@@ -238,13 +276,13 @@ function extractSiteInfo(result) {
 }
 
 /**
- * Airtableに既存サイトがあるかチェック
+ * Airtableに既存サイトがあるかチェック（Slugベース）
  */
-async function checkExistingSite(url) {
+async function checkExistingSite(slug) {
   try {
-    const encodedUrl = url.replace(/'/g, "\\'");
+    const encodedSlug = slug.replace(/'/g, "\\'");
     const response = await fetch(
-      `${AIRTABLE_API_URL}/Sites?filterByFormula={URL}='${encodedUrl}'`,
+      `${AIRTABLE_API_URL}/Sites?filterByFormula={Slug}='${encodedSlug}'`,
       {
         headers: {
           Authorization: `Bearer ${AIRTABLE_API_KEY}`,
@@ -302,6 +340,7 @@ async function main() {
 
   const allSites = [];
   const seenUrls = new Set();
+  const seenSlugs = new Set(); // Slugベースの重複チェック
   let totalSearched = 0;
 
   // 各検索クエリで検索
@@ -314,7 +353,7 @@ async function main() {
     totalSearched += results.length;
 
     for (const result of results) {
-      // 重複チェック
+      // URL重複チェック
       if (seenUrls.has(result.link)) continue;
       seenUrls.add(result.link);
 
@@ -328,8 +367,12 @@ async function main() {
       const siteInfo = extractSiteInfo(result);
       if (!siteInfo) continue;
 
-      // Airtableに既に存在するかチェック
-      const exists = await checkExistingSite(result.link);
+      // Slug重複チェック（同じドメインは1つだけ）
+      if (seenSlugs.has(siteInfo.Slug)) continue;
+      seenSlugs.add(siteInfo.Slug);
+
+      // Airtableに既に存在するかチェック（Slugベース）
+      const exists = await checkExistingSite(siteInfo.Slug);
       if (exists) {
         // 既存サイトは静かにスキップ（ログを減らす）
         continue;
