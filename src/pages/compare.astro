@@ -1,0 +1,205 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StarRating from '../components/StarRating.astro';
+import CategoryBadge from '../components/CategoryBadge.astro';
+import { getSiteBySlug, type PricingType } from '../lib/airtable';
+
+const url = new URL(Astro.request.url);
+const slugs = url.searchParams.getAll('site');
+
+// 最大3サイトまで
+const limitedSlugs = slugs.slice(0, 3);
+
+const sites = await Promise.all(
+  limitedSlugs.map(slug => getSiteBySlug(slug))
+);
+
+// nullを除外
+const validSites = sites.filter(site => site !== null);
+
+const pricingLabels: Record<PricingType, string> = {
+  free: '完全無料',
+  partially_paid: '一部有料プランあり',
+  fully_paid: '有料サービス',
+  unknown: '料金体系不明',
+};
+---
+
+<BaseLayout
+  title="サイト比較 | 競馬予想サイト口コミプラットフォーム"
+  description="複数の競馬予想サイトを比較して、最適なサイトを見つけよう。"
+>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">サイト比較</h1>
+    <p class="text-gray-600 mb-8">
+      {validSites.length > 0
+        ? `${validSites.length}件のサイトを比較しています`
+        : 'サイトを選択して比較してください'}
+    </p>
+
+    {
+      validSites.length === 0 ? (
+        <div class="bg-white rounded-lg shadow-md p-8 text-center">
+          <svg
+            class="w-16 h-16 mx-auto text-gray-300 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
+          </svg>
+          <p class="text-gray-600 mb-4">比較するサイトが選択されていません</p>
+          <a href="/keiba-yosou/" class="btn-primary inline-block">
+            サイト一覧から選ぶ
+          </a>
+        </div>
+      ) : (
+        <div class="overflow-x-auto">
+          <table class="w-full bg-white rounded-lg shadow-md">
+            <thead class="bg-gray-50 border-b">
+              <tr>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-700 w-48">項目</th>
+                {validSites.map(site => (
+                  <th class="px-4 py-3 text-center min-w-[250px]">
+                    <div class="space-y-2">
+                      <CategoryBadge category={site.category} />
+                      <a
+                        href={`/keiba-yosou/${site.slug}/`}
+                        class="font-bold text-gray-900 hover:text-blue-600"
+                      >
+                        {site.name}
+                      </a>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <!-- 評価 -->
+              <tr>
+                <td class="px-4 py-4 text-sm font-medium text-gray-700">総合評価</td>
+                {validSites.map(site => (
+                  <td class="px-4 py-4 text-center">
+                    <div class="flex flex-col items-center gap-2">
+                      <StarRating rating={Math.round(site.average_rating)} size="md" />
+                      <span class="text-xl font-bold text-gray-900">
+                        {site.average_rating.toFixed(1)}
+                      </span>
+                      <span class="text-sm text-gray-500">({site.review_count}件の口コミ)</span>
+                    </div>
+                  </td>
+                ))}
+              </tr>
+
+              <!-- 料金体系 -->
+              <tr>
+                <td class="px-4 py-4 text-sm font-medium text-gray-700">料金体系</td>
+                {validSites.map(site => (
+                  <td class="px-4 py-4 text-center">
+                    <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                      {pricingLabels[site.pricing_type]}
+                    </span>
+                  </td>
+                ))}
+              </tr>
+
+              <!-- 無料お試し -->
+              <tr>
+                <td class="px-4 py-4 text-sm font-medium text-gray-700">無料お試し</td>
+                {validSites.map(site => (
+                  <td class="px-4 py-4 text-center">
+                    {site.has_free_trial ? (
+                      <span class="text-green-600 font-medium">あり</span>
+                    ) : (
+                      <span class="text-gray-400">なし</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+
+              <!-- 会員登録 -->
+              <tr>
+                <td class="px-4 py-4 text-sm font-medium text-gray-700">会員登録</td>
+                {validSites.map(site => (
+                  <td class="px-4 py-4 text-center">
+                    {site.registration_required ? (
+                      <span class="text-gray-700 font-medium">必要</span>
+                    ) : (
+                      <span class="text-green-600 font-medium">不要</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+
+              <!-- サイト状況 -->
+              <tr>
+                <td class="px-4 py-4 text-sm font-medium text-gray-700">サイト状況</td>
+                {validSites.map(site => (
+                  <td class="px-4 py-4 text-center">
+                    {site.is_closed ? (
+                      <span class="text-red-600 font-medium">閉鎖の可能性あり</span>
+                    ) : (
+                      <span class="text-green-600 font-medium">運営中</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+
+              <!-- 説明 -->
+              <tr>
+                <td class="px-4 py-4 text-sm font-medium text-gray-700">サイト説明</td>
+                {validSites.map(site => (
+                  <td class="px-4 py-4 text-sm text-gray-600 text-left">
+                    {site.description?.substring(0, 100) || '説明なし'}
+                    {site.description && site.description.length > 100 && '...'}
+                  </td>
+                ))}
+              </tr>
+
+              <!-- アクション -->
+              <tr>
+                <td class="px-4 py-4 text-sm font-medium text-gray-700">リンク</td>
+                {validSites.map(site => (
+                  <td class="px-4 py-4 text-center">
+                    <div class="flex flex-col gap-2">
+                      <a
+                        href={`/keiba-yosou/${site.slug}/`}
+                        class="btn-secondary text-sm py-2"
+                      >
+                        詳細を見る
+                      </a>
+                      <a
+                        href={site.url}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        class="btn-primary text-sm py-2"
+                      >
+                        サイトを見る
+                      </a>
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    <!-- 他のサイトを追加 -->
+    {
+      validSites.length > 0 && validSites.length < 3 && (
+        <div class="mt-8 text-center">
+          <a href="/keiba-yosou/" class="btn-secondary inline-block">
+            他のサイトを追加する
+          </a>
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>

@@ -34,6 +34,8 @@ function getBase(): Airtable.Base | null {
 const isDemoMode = getAirtableConfig().isDemoMode;
 
 // 型定義
+export type PricingType = 'free' | 'partially_paid' | 'fully_paid' | 'unknown';
+
 export interface Site {
   id: string;
   name: string;
@@ -47,6 +49,12 @@ export interface Site {
   is_approved: boolean;
   created_at: string;
   updated_at: string;
+  // 新規フィールド
+  pricing_type: PricingType;
+  has_free_trial: boolean;
+  registration_required: boolean;
+  last_verified_at: string | null;
+  is_closed: boolean;
 }
 
 export interface SiteWithStats extends Site {
@@ -67,6 +75,9 @@ export interface Review {
   is_spam: boolean;
   created_at: string;
   approved_at: string | null;
+  // 新規フィールド
+  helpful_count: number;
+  verified_user: boolean;
 }
 
 export interface ReviewWithSite extends Review {
@@ -97,6 +108,11 @@ const demoSites: SiteWithStats[] = [
     is_approved: true,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
+    pricing_type: 'partially_paid',
+    has_free_trial: true,
+    registration_required: true,
+    last_verified_at: '2024-11-01T00:00:00Z',
+    is_closed: false,
     review_count: 15,
     average_rating: 4.2,
     last_review_at: '2024-11-20T00:00:00Z',
@@ -220,6 +236,12 @@ function recordToSite(record: Airtable.Record<any>): SiteWithStats {
     is_approved: fields.IsApproved || false,
     created_at: record._rawJson.createdTime,
     updated_at: record._rawJson.createdTime,
+    // 新規フィールド
+    pricing_type: (fields.PricingType as PricingType) || 'unknown',
+    has_free_trial: fields.HasFreeTrial || false,
+    registration_required: fields.RegistrationRequired || false,
+    last_verified_at: fields.LastVerifiedAt || null,
+    is_closed: fields.IsClosed || false,
     review_count: 0,  // Reviewsリンクから計算する必要がある
     average_rating: 0,  // Reviewsから計算する必要がある
     last_review_at: null,
@@ -241,6 +263,9 @@ function recordToReview(record: Airtable.Record<any>): Review {
     is_spam: fields.IsSpam || false,
     created_at: record._rawJson.createdTime,
     approved_at: fields.ApprovedAt || null,
+    // 新規フィールド
+    helpful_count: fields.HelpfulCount || 0,
+    verified_user: fields.VerifiedUser || false,
   };
 }
 
@@ -375,7 +400,7 @@ export async function getSiteBySlug(slug: string): Promise<SiteWithStats | null>
   }
 }
 
-export async function getReviewsBySiteId(siteId: string): Promise<Review[]> {
+export async function getReviewsBySiteId(siteId: string, sortBy: 'newest' | 'rating' | 'helpful' = 'newest'): Promise<Review[]> {
   const { isDemoMode } = getAirtableConfig();
 
   if (isDemoMode) {
@@ -400,11 +425,22 @@ export async function getReviewsBySiteId(siteId: string): Promise<Review[]> {
       return siteField && Array.isArray(siteField) && siteField.includes(siteId);
     });
 
-    // Sort by created time (newest first)
+    // Sort based on sortBy parameter
     filteredRecords.sort((a, b) => {
-      const aTime = new Date(a._rawJson.createdTime).getTime();
-      const bTime = new Date(b._rawJson.createdTime).getTime();
-      return bTime - aTime;
+      switch (sortBy) {
+        case 'rating':
+          // Sort by rating (highest first)
+          return (b.fields.Rating as number || 0) - (a.fields.Rating as number || 0);
+        case 'helpful':
+          // Sort by helpful count (most helpful first)
+          return (b.fields.HelpfulCount as number || 0) - (a.fields.HelpfulCount as number || 0);
+        case 'newest':
+        default:
+          // Sort by created time (newest first)
+          const aTime = new Date(a._rawJson.createdTime).getTime();
+          const bTime = new Date(b._rawJson.createdTime).getTime();
+          return bTime - aTime;
+      }
     });
 
     return filteredRecords.map(recordToReview);

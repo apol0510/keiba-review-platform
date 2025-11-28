@@ -6,6 +6,7 @@ import ReviewCard from '../../../components/ReviewCard.astro';
 import SiteCard from '../../../components/SiteCard.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import ReviewForm from '../../../components/ReviewForm';
+import PricingInfo from '../../../components/PricingInfo.astro';
 import { getSiteBySlug, getReviewsBySiteId, getSitesWithStats, categoryLabels } from '../../../lib/airtable';
 
 const { slug } = Astro.params;
@@ -29,6 +30,7 @@ let siteData: {
   site: any;
   reviews: any[];
   ratingDistribution: { rating: number; count: number; percentage: number }[];
+  sortBy: string;
   breadcrumbItems: { label: string; href?: string }[];
   structuredData: any;
 } | null = null;
@@ -83,7 +85,10 @@ if (isCategory) {
     return Astro.redirect('/404');
   }
 
-  const reviews = await getReviewsBySiteId(site.id);
+  const url = new URL(Astro.request.url);
+  const sortBy = (url.searchParams.get('sort') as 'newest' | 'rating' | 'helpful') || 'newest';
+
+  const reviews = await getReviewsBySiteId(site.id, sortBy);
 
   const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => {
     const count = reviews.filter((r) => r.rating === rating).length;
@@ -127,6 +132,7 @@ if (isCategory) {
     site,
     reviews,
     ratingDistribution,
+    sortBy,
     breadcrumbItems: [
       { label: 'サイト一覧', href: '/keiba-yosou/' },
       { label: categoryLabels[site.category], href: `/keiba-yosou/${site.category}/` },
@@ -346,9 +352,19 @@ if (isCategory) {
 
           <!-- Reviews -->
           <div class="mb-8">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <h2 class="text-lg font-bold text-gray-900">口コミ一覧</h2>
-              <span class="text-sm text-gray-600">{siteData.reviews.length}件</span>
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-600">{siteData.reviews.length}件</span>
+                <form method="get" class="flex items-center gap-2">
+                  <label class="text-sm text-gray-600">並び替え:</label>
+                  <select name="sort" class="form-input text-sm py-1 px-2 rounded border-gray-300" onchange="this.form.submit()">
+                    <option value="newest" selected={siteData.sortBy === 'newest'}>新着順</option>
+                    <option value="rating" selected={siteData.sortBy === 'rating'}>評価順</option>
+                    <option value="helpful" selected={siteData.sortBy === 'helpful'}>参考になった順</option>
+                  </select>
+                </form>
+              </div>
             </div>
 
             {
@@ -382,7 +398,16 @@ if (isCategory) {
         </div>
 
         <!-- Sidebar -->
-        <div class="lg:col-span-1">
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Pricing & Service Info -->
+          <PricingInfo
+            pricingType={siteData.site.pricing_type}
+            hasFreeTrial={siteData.site.has_free_trial}
+            registrationRequired={siteData.site.registration_required}
+            lastVerifiedAt={siteData.site.last_verified_at}
+            isClosed={siteData.site.is_closed}
+          />
+
           <!-- Review Form -->
           <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
             <h2 class="text-lg font-bold text-gray-900 mb-4">口コミを投稿する</h2>

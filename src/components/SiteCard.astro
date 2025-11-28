@@ -10,10 +10,8 @@ interface Props {
 const { site } = Astro.props;
 ---
 
-<a
-  href={`/keiba-yosou/${site.slug}/`}
-  class="block bg-white rounded-lg shadow-md overflow-hidden card-hover"
->
+<div class="relative bg-white rounded-lg shadow-md overflow-hidden card-hover group">
+  <a href={`/keiba-yosou/${site.slug}/`} class="block">
   <div class="aspect-video bg-gray-100 relative">
     {
       site.screenshot_url ? (
@@ -54,4 +52,146 @@ const { site } = Astro.props;
       )
     }
   </div>
-</a>
+  </a>
+
+  <!-- 比較に追加ボタン -->
+  <div class="px-4 pb-4">
+    <button
+      type="button"
+      class="compare-btn w-full py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors"
+      data-site-slug={site.slug}
+      data-site-name={site.name}
+    >
+      <span class="compare-add">比較に追加</span>
+      <span class="compare-remove hidden">比較から削除</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const COMPARE_KEY = 'compare_sites';
+    const MAX_COMPARE = 3;
+
+    // localStorage から比較リストを取得
+    function getCompareList(): string[] {
+      const stored = localStorage.getItem(COMPARE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    }
+
+    // localStorage に比較リストを保存
+    function saveCompareList(list: string[]) {
+      localStorage.setItem(COMPARE_KEY, JSON.stringify(list));
+      updateCompareBar();
+    }
+
+    // 比較バーを更新
+    function updateCompareBar() {
+      const list = getCompareList();
+      let compareBar = document.getElementById('compare-bar');
+
+      if (list.length > 0) {
+        if (!compareBar) {
+          // 比較バーを作成
+          compareBar = document.createElement('div');
+          compareBar.id = 'compare-bar';
+          compareBar.className = 'fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg z-40';
+          compareBar.innerHTML = `
+            <div class="max-w-6xl mx-auto flex items-center justify-between">
+              <div>
+                <span class="font-bold">比較リスト:</span>
+                <span id="compare-count">${list.length}</span>件選択中
+              </div>
+              <div class="flex gap-2">
+                <button id="clear-compare-btn" class="px-4 py-2 bg-white text-blue-600 rounded hover:bg-gray-100">
+                  クリア
+                </button>
+                <a href="/compare?${list.map(s => `site=${s}`).join('&')}" class="px-4 py-2 bg-white text-blue-600 rounded hover:bg-gray-100">
+                  比較する (${list.length}件)
+                </a>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(compareBar);
+
+          // クリアボタンのイベント
+          document.getElementById('clear-compare-btn')?.addEventListener('click', () => {
+            localStorage.removeItem(COMPARE_KEY);
+            compareBar?.remove();
+            updateAllButtons();
+          });
+        } else {
+          // 既存の比較バーを更新
+          const countSpan = compareBar.querySelector('#compare-count');
+          if (countSpan) countSpan.textContent = list.length.toString();
+
+          const compareLink = compareBar.querySelector('a[href^="/compare"]');
+          if (compareLink) {
+            compareLink.setAttribute('href', `/compare?${list.map(s => `site=${s}`).join('&')}`);
+            compareLink.textContent = `比較する (${list.length}件)`;
+          }
+        }
+      } else {
+        compareBar?.remove();
+      }
+    }
+
+    // すべてのボタンの状態を更新
+    function updateAllButtons() {
+      const list = getCompareList();
+      document.querySelectorAll('.compare-btn').forEach((btn) => {
+        const slug = btn.getAttribute('data-site-slug');
+        const isSelected = slug && list.includes(slug);
+
+        const addSpan = btn.querySelector('.compare-add');
+        const removeSpan = btn.querySelector('.compare-remove');
+
+        if (isSelected) {
+          addSpan?.classList.add('hidden');
+          removeSpan?.classList.remove('hidden');
+          btn.classList.add('bg-blue-200', 'border-blue-400');
+          btn.classList.remove('bg-blue-50', 'border-blue-200');
+        } else {
+          addSpan?.classList.remove('hidden');
+          removeSpan?.classList.add('hidden');
+          btn.classList.remove('bg-blue-200', 'border-blue-400');
+          btn.classList.add('bg-blue-50', 'border-blue-200');
+        }
+      });
+    }
+
+    // 比較ボタンのクリックイベント
+    document.querySelectorAll('.compare-btn').forEach((button) => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const slug = button.getAttribute('data-site-slug');
+        const name = button.getAttribute('data-site-name');
+
+        if (!slug) return;
+
+        let list = getCompareList();
+
+        if (list.includes(slug)) {
+          // 削除
+          list = list.filter(s => s !== slug);
+        } else {
+          // 追加
+          if (list.length >= MAX_COMPARE) {
+            alert(`比較できるサイトは最大${MAX_COMPARE}件までです`);
+            return;
+          }
+          list.push(slug);
+        }
+
+        saveCompareList(list);
+        updateAllButtons();
+      });
+    });
+
+    // 初期化
+    updateCompareBar();
+    updateAllButtons();
+  });
+</script>

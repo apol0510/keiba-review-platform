@@ -46,10 +46,27 @@ const categoryLabels: Record<string, string> = {
 <BaseLayout title="未承認サイト一覧 - 管理画面" description="未承認サイトの管理">
   <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">未承認サイト一覧</h1>
-      <p class="text-gray-600">
-        ユーザーから登録されたサイトを確認し、承認または却下してください。
-      </p>
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">未承認サイト一覧</h1>
+          <p class="text-gray-600">
+            ユーザーから登録されたサイトを確認し、承認または却下してください。
+          </p>
+        </div>
+        {pendingSites.length > 0 && (
+          <div class="text-right">
+            <p class="text-sm text-gray-600 mb-2">
+              未承認サイト: <span class="font-bold text-lg text-blue-600">{pendingSites.length}件</span>
+            </p>
+            <button
+              id="bulk-approve-btn"
+              class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium shadow-md"
+            >
+              📦 全て承認（一括）
+            </button>
+          </div>
+        )}
+      </div>
     </div>
 
     {pendingSites.length === 0 ? (
@@ -118,14 +135,73 @@ const categoryLabels: Record<string, string> = {
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // 承認ボタン
+      // 一括承認ボタン
+      const bulkApproveBtn = document.getElementById('bulk-approve-btn');
+      if (bulkApproveBtn) {
+        bulkApproveBtn.addEventListener('click', async () => {
+          const approveButtons = document.querySelectorAll('.approve-btn');
+          const totalSites = approveButtons.length;
+
+          if (!confirm(`${totalSites}件のサイトを一括承認しますか？\n\n注意: スクリーンショットは取得されません。後でスクリプトを実行してください。`)) {
+            return;
+          }
+
+          bulkApproveBtn.disabled = true;
+          bulkApproveBtn.textContent = '処理中... 0/' + totalSites;
+
+          let approved = 0;
+          let failed = 0;
+
+          for (const btn of approveButtons) {
+            const button = btn as HTMLButtonElement;
+            const siteId = button.dataset.siteId;
+
+            try {
+              // スクリーンショット取得なしで承認（IsApprovedのみ変更）
+              const response = await fetch('/api/admin/bulk-approve-site', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ siteId }),
+              });
+
+              if (response.ok) {
+                approved++;
+                button.textContent = '✅ 承認済み';
+                button.disabled = true;
+                button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                button.classList.add('bg-gray-400');
+              } else {
+                failed++;
+                button.textContent = '❌ 失敗';
+              }
+            } catch (error) {
+              failed++;
+              button.textContent = '❌ エラー';
+            }
+
+            bulkApproveBtn.textContent = `処理中... ${approved + failed}/${totalSites}`;
+
+            // API制限を考慮して少し待機
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          bulkApproveBtn.textContent = `完了: ${approved}件承認、${failed}件失敗`;
+
+          setTimeout(() => {
+            alert(`一括承認完了\n\n成功: ${approved}件\n失敗: ${failed}件\n\n次のステップ:\nnode scripts/capture-screenshots.js を実行してスクリーンショットを取得してください。`);
+            window.location.reload();
+          }, 1000);
+        });
+      }
+
+      // 承認ボタン（個別）
       document.querySelectorAll('.approve-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const button = e.target as HTMLButtonElement;
           const siteId = button.dataset.siteId;
           const siteUrl = button.dataset.siteUrl;
 
-          if (!confirm('このサイトを承認しますか？')) return;
+          if (!confirm('このサイトを承認しますか？\n（スクリーンショットを自動取得します）')) return;
 
           button.disabled = true;
           button.textContent = '処理中...';
