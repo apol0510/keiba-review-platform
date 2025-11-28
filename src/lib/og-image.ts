@@ -44,7 +44,7 @@ export async function generateOgImage(options: OgImageOptions): Promise<Buffer> 
 
   // カテゴリラベル
   const categoryLabels: Record<string, string> = {
-    nankan: 'NANKAN',
+    nankan: '南関競馬',
     chuo: '中央競馬',
     chihou: '地方競馬',
     other: 'その他',

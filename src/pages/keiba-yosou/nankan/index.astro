@@ -1,17 +1,20 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteCard from '../../components/SiteCard.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
-import EmptyState from '../../components/EmptyState.astro';
-import { getSitesWithStats, categoryLabels } from '../../lib/airtable';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteCard from '../../../components/SiteCard.astro';
+import Breadcrumb from '../../../components/Breadcrumb.astro';
+import EmptyState from '../../../components/EmptyState.astro';
+import { getSitesWithStats, categoryLabels } from '../../../lib/airtable';
+
+const category = 'nankan';
 
 // クエリパラメータ取得
 const url = new URL(Astro.request.url);
 const searchQuery = url.searchParams.get('q') || '';
 const sortBy = url.searchParams.get('sort') || 'popular';
 
-// データ取得
+// データ取得（カテゴリでフィルタ）
 let sites = await getSitesWithStats();
+sites = sites.filter(site => site.category === category);
 
 // 検索フィルタ
 if (searchQuery) {
@@ -37,19 +40,22 @@ switch (sortBy) {
     sites.sort((a, b) => b.review_count - a.review_count);
 }
 
-const breadcrumbItems = [{ label: 'サイト一覧' }];
+const breadcrumbItems = [
+  { label: 'サイト一覧', href: '/keiba-yosou/' },
+  { label: categoryLabels[category] }
+];
 ---
 
 <BaseLayout
-  title="競馬予想サイト一覧"
-  description="競馬予想サイトの口コミ・評判を一覧で確認。南関競馬、中央競馬、地方競馬など各カテゴリのサイトを比較できます。"
+  title={`${categoryLabels[category]}の予想サイト`}
+  description={`${categoryLabels[category]}専門の競馬予想サイト一覧。大井・川崎・船橋・浦和の予想情報を提供するサイトを比較。`}
 >
   <div class="max-w-6xl mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} />
 
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
       <h1 class="text-2xl font-bold text-gray-900 mb-4 md:mb-0">
-        競馬予想サイト一覧
+        {categoryLabels[category]}の予想サイト
         {searchQuery && <span class="text-lg font-normal text-gray-600">「{searchQuery}」の検索結果</span>}
       </h1>
       <div class="text-sm text-gray-600">{sites.length}件のサイト</div>
@@ -68,6 +74,9 @@ const breadcrumbItems = [{ label: 'サイト一覧' }];
           />
         </div>
         <div class="flex gap-2">
+          <label class="text-sm text-gray-600 flex items-center">
+            並び替え:
+          </label>
           <select name="sort" class="form-input w-auto">
             <option value="popular" selected={sortBy === 'popular'}>人気順</option>
             <option value="rating" selected={sortBy === 'rating'}>評価順</option>
@@ -83,7 +92,7 @@ const breadcrumbItems = [{ label: 'サイト一覧' }];
     <div class="flex flex-wrap gap-2 mb-8">
       <a
         href="/keiba-yosou/"
-        class="px-4 py-2 rounded-full border-2 border-blue-600 bg-white text-blue-600 text-sm font-bold shadow-sm"
+        class="px-4 py-2 rounded-full border-2 border-gray-300 bg-white text-gray-700 text-sm font-medium hover:border-blue-400 hover:text-blue-600 transition-colors"
       >
         すべて
       </a>
@@ -91,7 +100,11 @@ const breadcrumbItems = [{ label: 'サイト一覧' }];
         Object.entries(categoryLabels).map(([key, label]) => (
           <a
             href={`/keiba-yosou/${key}/`}
-            class="px-4 py-2 rounded-full border-2 border-gray-300 bg-white text-gray-700 text-sm font-medium hover:border-blue-400 hover:text-blue-600 transition-colors"
+            class={`px-4 py-2 rounded-full border-2 text-sm transition-colors ${
+              key === category
+                ? 'border-blue-600 bg-white text-blue-600 font-bold shadow-sm'
+                : 'border-gray-300 bg-white text-gray-700 font-medium hover:border-blue-400 hover:text-blue-600'
+            }`}
           >
             {label}
           </a>
@@ -119,7 +132,9 @@ const breadcrumbItems = [{ label: 'サイト一覧' }];
         <EmptyState
           icon="document"
           title="まだサイトが登録されていません"
-          description="現在、このカテゴリにはサイトが登録されていません。しばらくお待ちください。"
+          description={`現在、${categoryLabels[category]}のサイトは登録されていません。しばらくお待ちください。`}
+          actionText="すべてのサイトを見る"
+          actionHref="/keiba-yosou/"
         />
       )
     }

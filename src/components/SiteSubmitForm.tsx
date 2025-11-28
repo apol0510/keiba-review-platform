@@ -107,7 +107,7 @@ export default function SiteSubmitForm({ onSuccess }: SiteSubmitFormProps) {
           onChange={handleChange}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <option value="nankan">NANKAN（南関競馬）</option>
+          <option value="nankan">南関競馬</option>
           <option value="chuo">中央競馬</option>
           <option value="chihou">地方競馬</option>
           <option value="other">その他</option>

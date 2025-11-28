@@ -76,7 +76,7 @@ export interface ReviewWithSite extends Review {
 
 // カテゴリ表示名
 export const categoryLabels: Record<string, string> = {
-  nankan: 'NANKAN（南関）',
+  nankan: '南関競馬',
   chuo: '中央競馬',
   chihou: '地方競馬',
   other: 'その他',

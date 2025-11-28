@@ -1,25 +1,27 @@
 #!/usr/bin/env node
 
 /**
- * 競馬予想サイト自動取得スクリプト
+ * 競馬予想サイト自動取得スクリプト (SerpAPI版)
  *
- * Bing Search APIで競馬予想サイトを検索し、Airtableに自動登録します
+ * SerpAPI (Google検索) で競馬予想サイトを検索し、Airtableに自動登録します
  *
  * 使用方法:
- * BING_API_KEY=your-key AIRTABLE_API_KEY=your-token AIRTABLE_BASE_ID=your-base-id node scripts/fetch-keiba-sites.js
+ * SERPAPI_KEY=your-key AIRTABLE_API_KEY=your-token AIRTABLE_BASE_ID=your-base-id node scripts/fetch-keiba-sites.js
  */
 
-const BING_API_KEY = process.env.BING_API_KEY;
+import { getJson } from 'serpapi';
+import fetch from 'node-fetch';
+
+const SERPAPI_KEY = process.env.SERPAPI_KEY;
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 
-if (!BING_API_KEY || !AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+if (!SERPAPI_KEY || !AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
   console.error('❌ エラー: 環境変数が設定されていません');
-  console.error('必要な環境変数: BING_API_KEY, AIRTABLE_API_KEY, AIRTABLE_BASE_ID');
+  console.error('必要な環境変数: SERPAPI_KEY, AIRTABLE_API_KEY, AIRTABLE_BASE_ID');
   process.exit(1);
 }
 
-const BING_API_URL = 'https://api.bing.microsoft.com/v7.0/search';
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}`;
 
 // 検索キーワード
@@ -27,40 +29,33 @@ const SEARCH_QUERIES = [
   '南関競馬 予想サイト',
   '地方競馬 予想',
   '中央競馬 予想サイト',
-  '競馬予想 口コミ',
+  '競馬予想 的中',
 ];
 
 // カテゴリ判定キーワード
 const CATEGORY_KEYWORDS = {
-  nankan: ['南関', '大井', '川崎', '船橋', '浦和', 'NANKAN'],
+  nankan: ['南関', '大井', '川崎', '船橋', '浦和'],
   chuo: ['中央競馬', 'JRA', '東京競馬', '阪神競馬', '中京競馬', '京都競馬'],
   chihou: ['地方競馬', 'NAR', '園田', '金沢', '名古屋', '高知'],
 };
 
 /**
- * Bing Search APIで検索
+ * SerpAPIでGoogle検索
  */
-async function searchWithBing(query) {
+async function searchWithSerpAPI(query) {
   console.log(`🔍 検索中: "${query}"`);
 
-  const url = new URL(BING_API_URL);
-  url.searchParams.set('q', query);
-  url.searchParams.set('count', '10');
-  url.searchParams.set('mkt', 'ja-JP');
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        'Ocp-Apim-Subscription-Key': BING_API_KEY,
-      },
+    const response = await getJson({
+      engine: 'google',
+      api_key: SERPAPI_KEY,
+      q: query,
+      num: 10,
+      hl: 'ja',
+      gl: 'jp',
     });
 
-    if (!response.ok) {
-      throw new Error(`Bing API エラー: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.webPages?.value || [];
+    return response.organic_results || [];
   } catch (error) {
     console.error(`❌ 検索エラー (${query}):`, error.message);
     return [];
@@ -71,37 +66,38 @@ async function searchWithBing(query) {
  * URLからサイト情報を抽出
  */
 function extractSiteInfo(result) {
-  const url = new URL(result.url);
-  const domain = url.hostname.replace(/^www\./, '');
-  const name = result.name;
-  const description = result.snippet || '';
+  try {
+    const url = new URL(result.link);
+    const domain = url.hostname.replace(/^www\./, '');
+    const name = result.title;
+    const description = result.snippet || '';
 
-  // スラッグを生成（ドメイン名から）
-  const slug = domain.replace(/\./g, '-').replace(/[^a-z0-9-]/gi, '').toLowerCase();
+    // スラッグを生成（ドメイン名から）
+    const slug = domain.replace(/\./g, '-').replace(/[^a-z0-9-]/gi, '').toLowerCase();
 
-  // カテゴリ判定
-  let category = 'other';
-  const textToCheck = `${name} ${description} ${url}`.toLowerCase();
+    // カテゴリ判定
+    let category = 'other';
+    const textToCheck = `${name} ${description} ${url}`.toLowerCase();
 
-  for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    if (keywords.some(keyword => textToCheck.includes(keyword.toLowerCase()))) {
-      category = cat;
-      break;
+    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      if (keywords.some(keyword => textToCheck.includes(keyword.toLowerCase()))) {
+        category = cat;
+        break;
+      }
     }
-  }
 
-  return {
-    Name: name.substring(0, 100), // Airtableの制限に合わせる
-    Slug: slug,
-    URL: result.url,
-    Category: category,
-    Description: description.substring(0, 500),
-    Features: '', // 後で手動で追加
-    PriceInfo: '', // 後で手動で追加
-    IsApproved: false, // デフォルトは未承認
-    ReviewCount: 0,
-    AverageRating: 0,
-  };
+    return {
+      Name: name.substring(0, 100), // Airtableの制限に合わせる
+      Slug: slug,
+      URL: result.link,
+      Category: category,
+      Description: description.substring(0, 500),
+      IsApproved: false, // デフォルトは未承認
+    };
+  } catch (error) {
+    console.error(`❌ URL解析エラー:`, error.message);
+    return null;
+  }
 }
 
 /**
@@ -109,8 +105,9 @@ function extractSiteInfo(result) {
  */
 async function checkExistingSite(url) {
   try {
+    const encodedUrl = url.replace(/'/g, "\\'");
     const response = await fetch(
-      `${AIRTABLE_API_URL}/Sites?filterByFormula={URL}='${encodeURIComponent(url)}'`,
+      `${AIRTABLE_API_URL}/Sites?filterByFormula={URL}='${encodedUrl}'`,
       {
         headers: {
           Authorization: `Bearer ${AIRTABLE_API_KEY}`,
@@ -159,27 +156,31 @@ async function addSiteToAirtable(siteInfo) {
  * メイン処理
  */
 async function main() {
-  console.log('🚀 競馬予想サイト自動取得を開始します\n');
+  console.log('🚀 競馬予想サイト自動取得を開始します (SerpAPI版)\n');
+  console.log('📝 SerpAPI: Google検索結果を取得します');
+  console.log('📝 無料枠: 月5,000クエリ\n');
 
   const allSites = [];
   const seenUrls = new Set();
 
   // 各検索クエリで検索
   for (const query of SEARCH_QUERIES) {
-    const results = await searchWithBing(query);
+    const results = await searchWithSerpAPI(query);
+    console.log(`  ✅ ${results.length}件の結果を取得\n`);
 
     for (const result of results) {
       // 重複チェック
-      if (seenUrls.has(result.url)) continue;
-      seenUrls.add(result.url);
+      if (seenUrls.has(result.link)) continue;
+      seenUrls.add(result.link);
 
       // サイト情報を抽出
       const siteInfo = extractSiteInfo(result);
+      if (!siteInfo) continue;
 
       // Airtableに既に存在するかチェック
-      const exists = await checkExistingSite(result.url);
+      const exists = await checkExistingSite(result.link);
       if (exists) {
-        console.log(`⏭️  スキップ (既存): ${siteInfo.Name}`);
+        console.log(`  ⏭️  スキップ (既存): ${siteInfo.Name}`);
         continue;
       }
 
@@ -192,6 +193,11 @@ async function main() {
 
   console.log(`\n📊 検索結果: ${allSites.length}件の新規サイトを発見\n`);
 
+  if (allSites.length === 0) {
+    console.log('✅ 新規サイトはありませんでした');
+    return;
+  }
+
   // Airtableに登録
   let added = 0;
   for (const site of allSites) {
@@ -200,7 +206,7 @@ async function main() {
     const result = await addSiteToAirtable(site);
     if (result) {
       added++;
-      console.log(`✅ 登録完了: ${site.URL}`);
+      console.log(`  ✅ 登録完了: ${site.URL}`);
     }
 
     // API制限を考慮して少し待機
@@ -209,10 +215,9 @@ async function main() {
 
   console.log(`\n🎉 完了: ${added}件のサイトを登録しました`);
   console.log('\n次のステップ:');
-  console.log('1. Airtable Baseで確認: https://airtable.com/' + AIRTABLE_BASE_ID);
-  console.log('2. IsApprovedフィールドにチェックを入れて承認');
-  console.log('3. Features, PriceInfoなど詳細情報を追加');
-  console.log('4. サイトで確認: https://frabjous-taiyaki-460401.netlify.app/');
+  console.log('1. 管理画面で確認: https://frabjous-taiyaki-460401.netlify.app/admin/pending-sites');
+  console.log('2. サイトを承認して公開');
+  console.log('3. フロントエンドで確認: https://frabjous-taiyaki-460401.netlify.app/');
 }
 
 main().catch(error => {
