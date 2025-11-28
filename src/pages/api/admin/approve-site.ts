@@ -80,7 +80,7 @@ export const POST: APIRoute = async ({ request }) => {
 
 /**
  * スクリーンショットURLを生成
- * shot.screenshotapi.net を使用（無料、登録不要、高速）
+ * thum.io を使用（確実に動作、無料、登録不要）
  */
 function generateScreenshotUrl(siteUrl: string): string {
   if (!siteUrl) {
@@ -95,14 +95,9 @@ function generateScreenshotUrl(siteUrl: string): string {
     console.log(`Added https:// prefix to URL: ${normalizedUrl}`);
   }
 
-  const encodedUrl = encodeURIComponent(normalizedUrl);
-
-  // shot.screenshotapi.net: 無料、登録不要、高速CDN
-  // width=1200: 表示幅
-  // output=image: 画像として出力
-  // file_type=png: PNG形式（品質が良い）
-  // wait_for_event=load: ページ読み込み完了を待つ
-  const screenshotUrl = `https://shot.screenshotapi.net/screenshot?token=NRTY0JN-EE16VKV-PYJXGMP-4GV3C1T&url=${encodedUrl}&width=1200&output=image&file_type=png&wait_for_event=load`;
+  // thum.io: 確実に動作、無料、登録不要
+  // 600px幅で軽量化（元の1200pxから変更）
+  const screenshotUrl = `https://image.thum.io/get/width/600/crop/400/noanimate/${normalizedUrl}`;
 
   return screenshotUrl;
 }
