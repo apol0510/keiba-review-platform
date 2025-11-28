@@ -16,7 +16,7 @@ const { site } = Astro.props;
     {
       site.screenshot_url ? (
         <img
-          src={site.screenshot_url.replace('viewport_width=1200', 'viewport_width=600')}
+          src={site.screenshot_url.replace('width=1200', 'width=600')}
           alt={`${site.name}のスクリーンショット`}
           class="w-full h-full object-cover transition-opacity duration-300"
           loading="lazy"
