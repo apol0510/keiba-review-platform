@@ -281,14 +281,15 @@ node scripts/fetch-keiba-sites.js
 
 ### Phase 5 - 完了 ✅ (Airtable統合)
 - [x] データベースをSupabaseからAirtableに移行
-  - Sites テーブル（10件の実サイト）
-  - Reviews テーブル（55件の口コミ）
+  - Sites テーブル（88件の承認済みサイト）
+  - Reviews テーブル（口コミデータ）
 - [x] 口コミ自動投稿スクリプト（`scripts/seed-reviews.js`）
   - リアルな日本語口コミを自動生成
   - 評価分布の重み付け
 - [x] スクリーンショット自動取得（`scripts/capture-screenshots.js`）
-  - Puppeteerで全サイト撮影
+  - Puppeteerで自動撮影（1280x800）
   - 自動でAirtableに画像URL登録
+  - thum.io統合（600px base、400px thumbnails、noanimate）
 - [x] データ取得の最適化
   - レビューフィルタリングをJavaScriptで実装
   - 動的な統計計算（review_count、average_rating）
@@ -307,12 +308,16 @@ node scripts/fetch-keiba-sites.js
   - `POST /api/admin/approve-site` - 承認 + スクショ取得
   - `POST /api/admin/reject-site` - 却下・削除
 
-## 次のステップ（Phase 7 - 未実装）
+### Phase 7 - 完了 ✅ (SerpAPI統合)
+- [x] SerpAPI統合（`scripts/fetch-keiba-sites.js`）
+  - Google検索結果から新規サイトを自動発見
+  - 37種類の検索キーワードで包括的な検出
+  - Slug重複チェックによる既存サイトフィルタリング
+  - **重要**: IsApprovedフィールドを省略してAirtableのデフォルト値（Unchecked）を使用
+    - Airtable Checkbox フィールドは `false` を明示的に送信すると正しく動作しない
+    - フィールドを省略することでデフォルトの未チェック状態が適用される
 
-### SerpAPI統合（推奨）
-- [ ] `scripts/fetch-keiba-sites.js` をSerpAPIに対応
-- [ ] Google検索結果から新規サイトを自動発見
-- [ ] 定期実行の設定（GitHub Actions or cron）
+## 次のステップ（Phase 8 - 未実装）
 
 ### UX改善
 - [ ] サイト一覧に「サイト登録」ボタンを追加
@@ -323,6 +328,29 @@ node scripts/fetch-keiba-sites.js
 ### 通知機能
 - [ ] 新規サイト登録時にメール通知（SendGrid）
 - [ ] 新規口コミ投稿時の通知
+
+## トラブルシューティング
+
+### Airtable Checkbox フィールドの扱い
+
+**問題**: IsApprovedフィールドに `false` を明示的に送信しても、Airtableが無視してデフォルト値（Unchecked）として保存される場合がある。
+
+**解決策**:
+```javascript
+// ❌ 誤った方法（フィールドに false を送信）
+return {
+  Name: name,
+  IsApproved: false,  // これは無視される可能性がある
+};
+
+// ✅ 正しい方法（フィールドを省略）
+return {
+  Name: name,
+  // IsApprovedを省略してAirtableのデフォルト値を使用
+};
+```
+
+参考: `scripts/fetch-keiba-sites.js:338-345`
 
 ## 参照
 

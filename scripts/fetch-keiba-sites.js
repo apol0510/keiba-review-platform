@@ -341,7 +341,7 @@ function extractSiteInfo(result) {
       URL: url.origin + url.pathname, // クエリパラメータを除去
       Category: category,
       Description: description.substring(0, 500),
-      IsApproved: false, // デフォルトは未承認
+      // IsApprovedを省略してAirtableのデフォルト値（Unchecked）を使用
     };
   } catch (error) {
     console.error(`❌ URL解析エラー:`, error.message);
