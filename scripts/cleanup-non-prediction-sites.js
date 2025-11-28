@@ -55,6 +55,11 @@ const EXCLUDE_URL_PATTERNS = [
   'amazon.co.jp',
   'rakuten.co.jp',
 
+  // 投票サイト
+  'oddspark.com', // オッズパーク（投票サイト）
+  'spat4.jp',     // SPAT4（投票サイト）
+  'ipat.jra.go.jp', // IPAT（投票サイト）
+
   // その他
   'keibalab.jp',  // レース一覧のみ
   'jbis.or.jp',   // データベース
@@ -117,7 +122,6 @@ const APPROVED_DOMAINS = [
   'muryou-keiba-ai.jp',
   'aikba.net',
   'keibabook.co.jp',
-  'oddspark.com',
   'keiba-tokai.jp',
   'kanazawakeiba-yoso.com',
   'fukuchan.net',

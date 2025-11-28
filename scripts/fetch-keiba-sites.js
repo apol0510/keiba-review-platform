@@ -111,6 +111,11 @@ const EXCLUDED_PATTERNS = [
   'netkeiba.com/racecourse',
   'nar.netkeiba.com/racecourse',
 
+  // 投票サイト（馬券購入サービス）
+  'oddspark.com',
+  'spat4.jp',
+  'ipat.jra.go.jp',
+
   // URLパスパターン（個別記事を示す）
   '/article/',
   '/archives/',
