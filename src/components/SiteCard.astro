@@ -12,14 +12,19 @@ const { site } = Astro.props;
 
 <div class="relative bg-white rounded-lg shadow-md overflow-hidden card-hover group">
   <a href={`/keiba-yosou/${site.slug}/`} class="block">
-  <div class="aspect-video bg-gray-100 relative">
+  <div class="aspect-video bg-gray-100 relative overflow-hidden">
     {
       site.screenshot_url ? (
         <img
-          src={site.screenshot_url}
+          src={site.screenshot_url.replace('/width/1200/', '/width/600/')}
           alt={`${site.name}のスクリーンショット`}
-          class="w-full h-full object-cover"
+          class="w-full h-full object-cover transition-opacity duration-300"
           loading="lazy"
+          decoding="async"
+          width="600"
+          height="400"
+          onload="this.style.opacity='1'"
+          style="opacity: 0; background-color: #f3f4f6;"
         />
       ) : (
         <div class="w-full h-full flex items-center justify-center text-gray-400">
