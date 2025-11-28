@@ -128,12 +128,17 @@ const EXCLUDED_PATTERNS = [
   'nar.netkeiba.com/racecourse',
 
   // データベース・レース情報
-  'jbis.or.jp',  // JBISサーチ
-  'keibalab.jp',  // 競馬ラボ（レース一覧のみ）
+  'netkeiba.com',  // netkeiba（データベース・情報サイト）
+  'uma-x.jp',      // uma-x（データベース）
+  'regimag.jp',    // regimag（ランキング/レビューサイト）
+  'jbis.or.jp',    // JBISサーチ
+  'keibalab.jp',   // 競馬ラボ（レース一覧のみ）
+  'keiba-gp.com',  // 競馬予想GP（メディア）
 
   // 投票サイト（馬券購入サービス）
   'oddspark.com',
   'spat4.jp',
+  'spat4special.jp',  // SPAT4スペシャル
   'ipat.jra.go.jp',
 
   // 競馬新聞・メディア

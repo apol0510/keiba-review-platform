@@ -75,9 +75,15 @@ const EXCLUDE_URL_PATTERNS = [
   'kichiuma.net',      // 吉馬（WEB競馬新聞）
   'kichiuma-chiho.net', // 吉馬 地方競馬版
 
+  // データベース・情報サイト
+  'netkeiba.com',  // netkeiba（データベース）
+  'uma-x.jp',      // uma-x（データベース）
+  'regimag.jp',    // regimag（ランキング/レビューサイト）
+  'keibalab.jp',   // レース一覧のみ
+  'jbis.or.jp',    // JBISデータベース
+  'keiba-gp.com',  // 競馬予想GP（メディア）
+
   // その他
-  'keibalab.jp',  // レース一覧のみ
-  'jbis.or.jp',   // データベース
   'chiebukuro.yahoo.co.jp',  // Yahoo知恵袋
   'note.com',     // 個人note（予想サイトではない）
   'blogmura.com', // ブログランキング
@@ -85,6 +91,8 @@ const EXCLUDE_URL_PATTERNS = [
   'uma36.com',    // 馬三郎タイムズ（ランキングサイト）
   'keiba.pa.land.to', // ツール（早見表）
   'tom.tokyokeibajo.com', // ツール（買い目計算）
+  'youtube.com',  // YouTube
+  'spat4special.jp', // SPAT4スペシャル
 ];
 
 // 削除すべきサイト名パターン
