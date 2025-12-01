@@ -46,7 +46,7 @@ const { site } = Astro.props;
   <div class="p-4">
     <h3 class="font-bold text-gray-900 mb-2 line-clamp-1">{site.name}</h3>
     <div class="flex items-center gap-2 mb-2">
-      <StarRating rating={site.average_rating ? Math.round(site.average_rating) : 0} size="sm" />
+      <StarRating rating={site.average_rating || 0} size="sm" />
       <span class="text-sm text-gray-600">
         {site.average_rating ? site.average_rating.toFixed(1) : '0.0'} ({site.review_count}件)
       </span>
