@@ -132,9 +132,19 @@ const reviewTemplates = {
 };
 
 /**
+ * カテゴリ別のユーザー名プレフィックス
+ */
+const categoryUsernamePrefixes = {
+  nankan: ['南関', 'NANKAN', '南関ファン', '大井', '川崎', '船橋', '浦和'],
+  chuo: ['JRA', '中央', '競馬', 'keiba', '競馬ファン', 'ベテラン', '初心者'],
+  chihou: ['地方競馬', 'NAR', '地方', '園田', '金沢', '名古屋', '高知'],
+  other: ['競馬', 'keiba', '競馬ファン', 'ベテラン', '初心者']
+};
+
+/**
  * 評価に基づいた口コミを生成
  */
-function generateReviewByRating(siteName, rating) {
+function generateReviewByRating(siteName, rating, category = 'other') {
   const { type, score } = rating;
   const templates = reviewTemplates[type];
 
@@ -152,10 +162,11 @@ function generateReviewByRating(siteName, rating) {
     stars = 3; // 3★
   }
 
-  // ユーザー名を生成
-  const usernamePrefix = ['競馬', 'NANKAN', 'keiba', '南関', '地方競馬', '競馬ファン', 'ベテラン', '初心者'];
+  // カテゴリに応じたユーザー名を生成
+  const prefixes = categoryUsernamePrefixes[category] || categoryUsernamePrefixes.other;
+  const usernamePrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
   const usernameSuffix = ['太郎', 'さん', 'ユーザー', '好き', 'マニア', '愛好家', '馬券師'];
-  const username = `${usernamePrefix[Math.floor(Math.random() * usernamePrefix.length)]}${usernameSuffix[Math.floor(Math.random() * usernameSuffix.length)]}${Math.floor(Math.random() * 100)}`;
+  const username = `${usernamePrefix}${usernameSuffix[Math.floor(Math.random() * usernameSuffix.length)]}${Math.floor(Math.random() * 100)}`;
 
   return {
     rating: stars,
@@ -187,6 +198,7 @@ async function selectSitesToPost(maliciousSites, maxSites = 5) {
       return {
         id: siteRecord.id,
         name: siteRecord.fields.Name,
+        category: siteRecord.fields.Category || 'other',
         reviewCount,
         rating
       };
@@ -251,10 +263,10 @@ async function main() {
 
   for (const site of targetSites) {
     console.log(`\n🎯 ${site.name} に口コミを投稿中...`);
-    console.log(`   タイプ: ${site.rating.type}, 評価スコア: ${site.rating.score}`);
+    console.log(`   カテゴリ: ${site.category}, タイプ: ${site.rating.type}, 評価スコア: ${site.rating.score}`);
 
     for (let i = 0; i < site.reviewsToPost; i++) {
-      const review = generateReviewByRating(site.name, site.rating);
+      const review = generateReviewByRating(site.name, site.rating, site.category);
 
       console.log(`  ${i + 1}/${site.reviewsToPost}: [${review.rating}★] ${review.title}`);
 

@@ -8,11 +8,19 @@ const SITE_URL = import.meta.env.SITE_URL || 'https://frabjous-taiyaki-460401.ne
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { siteId, siteUrl, siteQuality, displayPriority } = await request.json();
+    const { siteId, siteUrl, category, siteQuality, displayPriority } = await request.json();
 
     if (!siteId) {
       return new Response(
         JSON.stringify({ message: 'サイトIDが指定されていません' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // カテゴリが指定されていない場合はエラー
+    if (!category || category === 'other') {
+      return new Response(
+        JSON.stringify({ message: 'カテゴリを選択してください（中央競馬、南関競馬、地方競馬）' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -38,9 +46,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     console.log('Site info:', { siteName, siteSlug, actualSiteUrl });
 
-    // サイトを承認状態に更新し、品質と優先度も設定
+    // サイトを承認状態に更新し、カテゴリ、品質、優先度も設定
     const updateFields: any = {
       IsApproved: true,
+      Category: category, // カテゴリを更新
     };
 
     // 品質が指定されている場合は設定（デフォルト: normal）
@@ -53,6 +62,7 @@ export const POST: APIRoute = async ({ request }) => {
       updateFields.DisplayPriority = displayPriority;
     }
 
+    console.log('Updating site with fields:', updateFields);
     await base('Sites').update(siteId, updateFields);
 
     // スクリーンショットURLを生成して保存
