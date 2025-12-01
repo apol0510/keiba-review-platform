@@ -16,9 +16,10 @@ const sizeClasses = {
 
 const stars = Array.from({ length: maxRating }, (_, i) => i + 1);
 
-// 評価を0.5刻みに丸める
+// 評価を0.5刻み（切り捨て）に変換
+// 1.0~1.4 → 1.0, 1.5~1.9 → 1.5, 2.0~2.4 → 2.0, 2.5~2.9 → 2.5, etc.
 function roundToHalf(rating: number): number {
-  return Math.round(rating * 2) / 2;
+  return Math.floor(rating * 2) / 2;
 }
 
 // 星の状態を判定（full, half, empty）
