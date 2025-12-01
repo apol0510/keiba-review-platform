@@ -186,10 +186,17 @@ export async function deleteSite(siteId: string): Promise<void> {
 
 // 口コミ取得（サイト別）
 export async function getReviewsBySite(siteId: string): Promise<Review[]> {
-  const records = await base('Reviews').select({
-    filterByFormula: `SEARCH('${siteId}', ARRAYJOIN({Site}))`,
+  // すべてのレビューを取得してから、JavaScriptでフィルタリング
+  const allRecords = await base('Reviews').select({
     sort: [{ field: 'CreatedAt', direction: 'desc' }]
   }).all();
+
+  // JavaScriptでsiteIdでフィルタリング
+  const records = allRecords.filter(record => {
+    const siteLinkField = record.fields.Site;
+    const linkedSiteId = Array.isArray(siteLinkField) ? siteLinkField[0] : siteLinkField;
+    return linkedSiteId === siteId;
+  });
 
   return records.map(record => ({
     id: record.id,
@@ -207,10 +214,19 @@ export async function getReviewsBySite(siteId: string): Promise<Review[]> {
 
 // 承認済み口コミ取得（サイト別）
 export async function getApprovedReviewsBySite(siteId: string): Promise<Review[]> {
-  const records = await base('Reviews').select({
-    filterByFormula: `AND(SEARCH('${siteId}', ARRAYJOIN({Site})), {IsApproved} = TRUE())`,
+  // すべての承認済みレビューを取得してから、JavaScriptでフィルタリング
+  // AirtableのSEARCH()が期待通りに動作しないため
+  const allRecords = await base('Reviews').select({
+    filterByFormula: '{IsApproved} = TRUE()',
     sort: [{ field: 'CreatedAt', direction: 'desc' }]
   }).all();
+
+  // JavaScriptでsiteIdでフィルタリング
+  const records = allRecords.filter(record => {
+    const siteLinkField = record.fields.Site;
+    const linkedSiteId = Array.isArray(siteLinkField) ? siteLinkField[0] : siteLinkField;
+    return linkedSiteId === siteId;
+  });
 
   return records.map(record => ({
     id: record.id,
