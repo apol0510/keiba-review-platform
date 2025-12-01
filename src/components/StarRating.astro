@@ -16,14 +16,20 @@ const sizeClasses = {
 
 const stars = Array.from({ length: maxRating }, (_, i) => i + 1);
 
+// 評価を0.5刻みに丸める
+function roundToHalf(rating: number): number {
+  return Math.round(rating * 2) / 2;
+}
+
 // 星の状態を判定（full, half, empty）
 function getStarType(starNumber: number, rating: number): 'full' | 'half' | 'empty' {
-  const decimal = rating % 1; // 小数部分を取得
+  const roundedRating = roundToHalf(rating);
+  const decimal = roundedRating % 1; // 小数部分を取得
 
-  if (starNumber <= Math.floor(rating)) {
+  if (starNumber <= Math.floor(roundedRating)) {
     return 'full';
-  } else if (starNumber === Math.floor(rating) + 1 && decimal >= 0.3) {
-    // 小数部分が0.3以上の場合のみ半星表示
+  } else if (starNumber === Math.floor(roundedRating) + 1 && decimal === 0.5) {
+    // 0.5の場合のみ半星表示
     return 'half';
   } else {
     return 'empty';
