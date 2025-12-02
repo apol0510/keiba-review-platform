@@ -197,6 +197,20 @@ const EXCLUDED_PATTERNS = [
   '/news_kiji/',       // ニュース記事
 ];
 
+// NGワード（含まれているとブロック）
+const NG_WORDS = [
+  // 詐欺・悪質
+  '詐欺', '騙された', '詐欺サイト', 'サギ',
+  // 金銭トラブル
+  '返金', '金返せ', '払い戻し',
+  // 過度な批判
+  '最悪', 'ひどい', 'クソ', '糞',
+  // 誹謗中傷
+  'バカ', '馬鹿', 'アホ',
+  // 問い合わせ先
+  '@', 'メール', '電話番号',
+];
+
 /**
  * URLが除外対象かチェック
  */
@@ -221,6 +235,82 @@ function shouldExcludeUrl(url) {
   }
 
   return false;
+}
+
+/**
+ * Phase 1: 品質チェック（自動化）
+ */
+async function checkSiteQuality(url, title, description) {
+  const checks = {
+    hasSSL: false,
+    hasTitle: false,
+    hasDescription: false,
+    hasKeibaKeyword: false,
+    noNGWords: false,
+  };
+
+  const reasons = [];
+
+  // 1. SSL/HTTPS チェック
+  checks.hasSSL = url.startsWith('https://');
+  if (!checks.hasSSL) {
+    reasons.push('HTTPSなし（セキュリティリスク）');
+  }
+
+  // 2. タイトルチェック（最低限の長さ）
+  checks.hasTitle = title && title.length >= 3;
+  if (!checks.hasTitle) {
+    reasons.push('タイトルが短すぎる（3文字未満）');
+  }
+
+  // 3. 説明文チェック（最低限の長さ）
+  checks.hasDescription = description && description.length >= 20;
+  if (!checks.hasDescription) {
+    reasons.push('説明文が短すぎる（20文字未満）');
+  }
+
+  // 4. 競馬関連キーワードチェック
+  const combinedText = `${title} ${description}`.toLowerCase();
+  const keibaKeywords = ['競馬', '予想', 'keiba', 'yosou', '馬券', 'jra', 'nar', '南関', '大井', '川崎', '船橋', '浦和', '地方競馬'];
+  checks.hasKeibaKeyword = keibaKeywords.some(keyword => combinedText.includes(keyword));
+  if (!checks.hasKeibaKeyword) {
+    reasons.push('競馬関連キーワードが見つからない');
+  }
+
+  // 5. NGワードチェック
+  checks.noNGWords = !NG_WORDS.some(ngWord => combinedText.includes(ngWord));
+  if (!checks.noNGWords) {
+    reasons.push('NGワードを含む（詐欺、悪質表現など）');
+  }
+
+  // スコア計算（5項目）
+  const score = Object.values(checks).filter(v => v).length;
+
+  // 判定
+  let status = 'pending';  // Airtableのデフォルト（IsApproved: false）
+  let quality = 'low';
+
+  if (score >= 4) {
+    // 5項目中4項目以上クリア → 承認
+    status = 'approved';
+    quality = 'high';
+  } else if (score >= 3) {
+    // 5項目中3項目クリア → 保留（手動確認が必要）
+    status = 'pending';
+    quality = 'medium';
+  } else {
+    // 5項目中2項目以下 → 却下
+    status = 'rejected';
+    quality = 'low';
+  }
+
+  return {
+    status,    // approved / pending / rejected
+    quality,   // high / medium / low
+    score,     // 0-5
+    checks,    // 各チェック項目の結果
+    reasons,   // 却下理由
+  };
 }
 
 /**
@@ -374,6 +464,34 @@ async function checkExistingSite(slug) {
 }
 
 /**
+ * 重複URLチェック（完全一致）
+ */
+async function checkDuplicateUrl(url) {
+  try {
+    // URLを正規化（クエリパラメータを除去）
+    const urlObj = new URL(url);
+    const normalizedUrl = urlObj.origin + urlObj.pathname;
+
+    const encodedUrl = encodeURIComponent(normalizedUrl);
+    const response = await fetch(
+      `${AIRTABLE_API_URL}/Sites?filterByFormula=URL='${encodedUrl}'`,
+      {
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+        },
+      }
+    );
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    return data.records.length > 0;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
  * Airtableにサイトを追加
  */
 async function addSiteToAirtable(siteInfo) {
@@ -452,8 +570,35 @@ async function main() {
         continue;
       }
 
-      allSites.push(siteInfo);
-      console.log(`  🆕 新規発見: ${siteInfo.Name} (${siteInfo.Category})`);
+      // 重複URLチェック（完全一致）
+      const duplicateUrl = await checkDuplicateUrl(siteInfo.URL);
+      if (duplicateUrl) {
+        console.log(`  ⚠️  重複URL: ${siteInfo.Name} - ${siteInfo.URL}`);
+        continue;
+      }
+
+      // Phase 1: 品質チェック
+      const qualityCheck = await checkSiteQuality(siteInfo.URL, siteInfo.Name, siteInfo.Description);
+
+      // 却下されたサイトはスキップ
+      if (qualityCheck.status === 'rejected') {
+        console.log(`  ❌ 却下: ${siteInfo.Name}`);
+        console.log(`     理由: ${qualityCheck.reasons.join(', ')}`);
+        console.log(`     スコア: ${qualityCheck.score}/5`);
+        continue;
+      }
+
+      // 保留または承認されたサイトは登録
+      allSites.push({
+        ...siteInfo,
+        qualityCheck,  // 品質チェック結果を追加（ログ用）
+      });
+
+      const emoji = qualityCheck.status === 'approved' ? '✅' : '⚠️';
+      console.log(`  ${emoji} 新規発見: ${siteInfo.Name} (${siteInfo.Category}) - スコア: ${qualityCheck.score}/5`);
+      if (qualityCheck.reasons.length > 0) {
+        console.log(`     注意: ${qualityCheck.reasons.join(', ')}`);
+      }
     }
 
     // API制限を考慮して少し待機
@@ -477,23 +622,52 @@ async function main() {
 
   // Airtableに登録
   let added = 0;
-  for (const site of allSites) {
-    console.log(`📝 登録中: ${site.Name} (${site.Category})`);
+  let approvedCount = 0;
+  let pendingCount = 0;
 
-    const result = await addSiteToAirtable(site);
+  for (const site of allSites) {
+    const quality = site.qualityCheck;
+
+    // qualityCheckプロパティを除去してAirtableに送信
+    const { qualityCheck, ...siteData } = site;
+
+    console.log(`📝 登録中: ${siteData.Name} (${siteData.Category})`);
+    console.log(`   品質: ${quality.quality} (${quality.score}/5) - ${quality.status === 'approved' ? '自動承認' : '手動確認必要'}`);
+
+    const result = await addSiteToAirtable(siteData);
     if (result) {
       added++;
-      console.log(`  ✅ 登録完了: ${site.URL}`);
+      if (quality.status === 'approved') {
+        approvedCount++;
+      } else {
+        pendingCount++;
+      }
+      console.log(`  ✅ 登録完了: ${siteData.URL}`);
     }
 
     // API制限を考慮して少し待機
     await new Promise(resolve => setTimeout(resolve, 200));
   }
 
-  console.log(`\n🎉 完了: ${added}件のサイトを登録しました`);
-  console.log('\n次のステップ:');
+  console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  console.log(`🎉 完了: ${added}件のサイトを登録しました`);
+  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  console.log(`\n📊 品質チェック結果:`);
+  console.log(`  ✅ 自動承認: ${approvedCount}件（高品質サイト）`);
+  console.log(`  ⚠️  手動確認: ${pendingCount}件（中品質サイト）`);
+  console.log(`\n💡 Phase 1 品質フィルター:`);
+  console.log(`  1. SSL/HTTPS チェック`);
+  console.log(`  2. タイトル長さチェック（3文字以上）`);
+  console.log(`  3. 説明文長さチェック（20文字以上）`);
+  console.log(`  4. 競馬関連キーワードチェック`);
+  console.log(`  5. NGワード検出（詐欺、悪質表現など）`);
+  console.log(`\n  スコア4-5/5: 自動承認`);
+  console.log(`  スコア3/5: 手動確認が必要`);
+  console.log(`  スコア0-2/5: 自動却下`);
+  console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+  console.log('次のステップ:');
   console.log('1. 管理画面で確認: https://frabjous-taiyaki-460401.netlify.app/admin/pending-sites');
-  console.log('2. サイトを承認して公開');
+  console.log('2. 手動確認が必要なサイトを承認または却下');
   console.log('3. フロントエンドで確認: https://frabjous-taiyaki-460401.netlify.app/');
 }
 
