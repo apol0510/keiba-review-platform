@@ -54,9 +54,10 @@ scripts/reviews-data/
 - **フロントエンド**: Astro 5.16.0 + React（インタラクティブ部分）
 - **スタイリング**: Tailwind CSS 4
 - **データベース**: Airtable（Sites、Reviews テーブル）
-- **スクリーンショット**: thum.io（600px、noanimate）
-- **ホスティング**: Netlify（SSR mode）
+- **スクリーンショット**: Puppeteer（自動取得）+ Sharp（WebP最適化）
+- **ホスティング**: Netlify（完全SSG mode）
 - **外部サービス**: SerpAPI（サイト検知）、SendGrid（通知・オプション）
+- **パフォーマンス**: 完全SSG、WebP画像、Netlify CDN
 
 ---
 
@@ -77,6 +78,12 @@ node scripts/run-daily-reviews-v3.cjs
 
 # サイト検知
 node scripts/fetch-keiba-sites.js
+
+# スクリーンショット自動取得（Puppeteer）
+AIRTABLE_API_KEY=xxx AIRTABLE_BASE_ID=xxx node scripts/puppeteer-screenshots.cjs
+
+# スクリーンショット最適化（WebP変換）
+node scripts/optimize-screenshots.cjs
 
 # カテゴリ確認
 node scripts/check-site-categories.cjs
