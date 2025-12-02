@@ -34,12 +34,31 @@ ${staticPages
   .join('\n')}
 ${sites
   .map(
-    (site) => `  <url>
+    (site) => {
+      // 日付のバリデーション
+      let lastmod: string;
+      try {
+        if (site.createdAt) {
+          const date = new Date(site.createdAt);
+          if (!isNaN(date.getTime())) {
+            lastmod = date.toISOString().split('T')[0];
+          } else {
+            lastmod = new Date().toISOString().split('T')[0];
+          }
+        } else {
+          lastmod = new Date().toISOString().split('T')[0];
+        }
+      } catch {
+        lastmod = new Date().toISOString().split('T')[0];
+      }
+
+      return `  <url>
     <loc>${SITE_URL}/keiba-yosou/${site.slug}/</loc>
-    <lastmod>${site.createdAt ? new Date(site.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}</lastmod>
+    <lastmod>${lastmod}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
-  </url>`
+  </url>`;
+    }
   )
   .join('\n')}
 </urlset>`;
