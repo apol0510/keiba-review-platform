@@ -7,8 +7,9 @@
  */
 export function getScreenshotUrl(slug: string, externalUrl?: string): string {
   // ローカルスクリーンショットが存在する場合、それを優先（最速）
+  // WebP形式で配信（600x400、85%品質、軽量）
   if (hasLocalScreenshot(slug)) {
-    return `/screenshots/${slug}.png`;
+    return `/screenshots/${slug}.webp`;
   }
 
   // ローカル画像がない場合はthum.ioにフォールバック
