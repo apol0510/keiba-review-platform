@@ -23,18 +23,27 @@ export function getScreenshotUrl(slug: string, externalUrl?: string): string {
 /**
  * 利用可能なローカルスクリーンショット一覧
  * public/screenshots/ に配置された画像のslug
+ * Puppeteerで自動取得した92サイト
  */
 export const AVAILABLE_SCREENSHOTS = [
-  'funabashi-keiba',
-  'jra',
-  'kawasaki-keiba',
-  'keiba-nar',
-  'keibalab',
-  'netkeiba',
-  'oddspark',
-  'oi-keiba',
-  'rakuten-keiba',
-  'spat4',
+  'ai-shisu-com', 'aikba-net', 'allwin7-com', 'anaumatou-jp', 'apolon-keibanahibi-com',
+  'baken-co-jp', 'baken-seikatsu-com', 'baxis-jp', 'bfkeiba-com', 'blog-rakuma-biz',
+  'bucchakeiba-com', 'climate-stories-org', 'cmjra-jp', 'craftmankeiba-com', 'd-ivine-com',
+  'daikaibou-com', 'digginkeiba-jp', 'dulbea-org', 'freekeiba-com', 'fukakukeiba-com',
+  'fukuuma-net', 'funabashi-keiba', 'gekisokeiba-livedoor-biz', 'glassbd4723-blog-fc2-com',
+  'harem-keiba-com', 'hibokorekeiba-com', 'hikky-keiba-com', 'horse-racing-ai-navi-com',
+  'humantransport-org', 'hybridyosou-blog-fc2-com', 'jiro8-sakura-ne-jp', 'johnhancockcenterchicago-com',
+  'jra', 'jra-k-ba-net', 'k-million-jp', 'k-refrain-com', 'kateru-uma-com', 'kawasaki-keiba',
+  'kayochinkeiba-com', 'keiba-ai-jp', 'keiba-expo-jp', 'keiba-kouryaku-net', 'keiba-nar',
+  'keiba-night-com', 'keiba-nine-com', 'keiba-no1-com', 'keiba-programs-v-jp', 'keiba36-com',
+  'keiba7-net', 'keibablood-com', 'keibagrant-jp', 'keibalab', 'keibariron-com', 'lounge-dmm-com',
+  'm-jockey-co-jp', 'masts-jp', 'muryou-keiba-ai-jp', 'nankankeiba-xyz', 'nar-k-ba-net',
+  'navi-keiba-com', 'netkeiba', 'oddspark', 'oi-keiba', 'pc-3448-jp', 'pluskeiba-com',
+  'rakuten-keiba', 'sarabure-jp', 'shinkeiba-com', 'sites-google-com', 'smart-horse-jp',
+  'spat4', 'stats-keiba-com', 't-tank-net', 'taro-k-com', 'tr-vision-net', 'turf-v-jp',
+  'uma-katsu-net', 'uma-maru-com', 'uma-pika-com', 'uma-quick-com', 'umabi-jp', 'umalog-net',
+  'umanity-jp', 'umarace-expert-com', 'umarand-com', 'umasera-com', 'vuma-ai', 'win-ver2-com',
+  'wkeibaw-net', 'xn--zuzt4cf1p1qr-com', 'yokodabi-jp', 'yorozuya-manba-com',
 ];
 
 /**
