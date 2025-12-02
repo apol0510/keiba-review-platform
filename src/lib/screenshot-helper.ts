@@ -1,17 +1,23 @@
 /**
  * スクリーンショット画像のURLを取得する
  * 優先順位:
- * 1. ローカル静的画像（/screenshots/slug.png）
- * 2. thum.io（外部API）
- * 3. フォールバック（SVGプレースホルダー）
+ * 1. ローカル静的画像（/screenshots/slug.png）- 10サイトのみ
+ * 2. thum.io（外部API）- 残りのサイト
+ * 3. フォールバック（SVGプレースホルダー）- エラー時
  */
 export function getScreenshotUrl(slug: string, externalUrl?: string): string {
-  // ローカル画像が存在する可能性がある場合、そちらを優先
-  // 本番環境ではNetlifyが自動的に最適化
-  const localPath = `/screenshots/${slug}.png`;
+  // ローカルスクリーンショットが存在する場合、それを優先（最速）
+  if (hasLocalScreenshot(slug)) {
+    return `/screenshots/${slug}.png`;
+  }
 
-  // ローカル画像を返す（存在しない場合はブラウザ側でフォールバック）
-  return localPath;
+  // ローカル画像がない場合はthum.ioにフォールバック
+  if (externalUrl) {
+    return `https://image.thum.io/get/width/600/crop/400/noanimate/${externalUrl}`;
+  }
+
+  // URLも無い場合はフォールバック画像
+  return getFallbackImage(600, 400);
 }
 
 /**
