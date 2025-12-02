@@ -1,5 +1,6 @@
 /**
  * 禁止ワードフィルターのテストスクリプト
+ * カテゴリ別禁止ワード + 自動投稿専用NGワードのテスト
  */
 
 const categoryForbiddenWords = {
@@ -32,6 +33,18 @@ const categoryForbiddenWords = {
   ]
 };
 
+const autoPostForbiddenWords = [
+  // サポート関連
+  'サポート', '対応が遅い', '返信がない', '連絡が取れない', '問い合わせ',
+
+  // 詐欺・悪質系
+  '詐欺', '騙された', '悪質', '詐欺サイト', '詐欺まがい',
+
+  // 具体的批判
+  '最悪', 'ひどい', '金返せ', '返金', '被害',
+  '訴える', '通報', '警察', '弁護士'
+];
+
 function containsForbiddenWords(text, category) {
   const forbiddenWords = categoryForbiddenWords[category] || [];
 
@@ -41,6 +54,15 @@ function containsForbiddenWords(text, category) {
     }
   }
 
+  return false;
+}
+
+function containsAutoPostForbiddenWords(text) {
+  for (const word of autoPostForbiddenWords) {
+    if (text.includes(word)) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -68,11 +90,25 @@ const testCases = [
   { text: '金沢競馬の予想', category: 'chihou', expected: false },
 ];
 
+// 自動投稿NGワードのテストケース
+const autoPostTestCases = [
+  { text: 'サポート対応が遅い', expected: true },
+  { text: '返信がない', expected: true },
+  { text: '詐欺サイトだ', expected: true },
+  { text: '最悪のサイト', expected: true },
+  { text: '金返せ', expected: true },
+  { text: '普通の予想サイト', expected: false },
+  { text: '的中率が高い', expected: false },
+  { text: '無料予想が当たる', expected: false },
+];
+
 console.log('🧪 禁止ワードフィルターのテスト\n');
 console.log('━'.repeat(80) + '\n');
 
 let passCount = 0;
 let failCount = 0;
+
+console.log('📋 Part 1: カテゴリ別禁止ワード\n');
 
 testCases.forEach((test, i) => {
   const result = containsForbiddenWords(test.text, test.category);
@@ -93,8 +129,28 @@ testCases.forEach((test, i) => {
   console.log('');
 });
 
+console.log('\n📋 Part 2: 自動投稿専用NGワード\n');
+
+autoPostTestCases.forEach((test, i) => {
+  const result = containsAutoPostForbiddenWords(test.text);
+  const isPassed = result === test.expected;
+  const status = isPassed ? '✅ PASS' : '❌ FAIL';
+
+  if (isPassed) {
+    passCount++;
+  } else {
+    failCount++;
+  }
+
+  console.log(`${status} テスト${testCases.length + i + 1}`);
+  console.log(`  口コミ: "${test.text}"`);
+  console.log(`  期待値: ${test.expected ? '🚫 禁止' : '✅ 許可'}`);
+  console.log(`  結果: ${result ? '🚫 禁止' : '✅ 許可'}`);
+  console.log('');
+});
+
 console.log('━'.repeat(80));
-console.log(`\n📊 テスト結果: ${passCount}/${testCases.length} 成功`);
+console.log(`\n📊 テスト結果: ${passCount}/${testCases.length + autoPostTestCases.length} 成功`);
 
 if (failCount === 0) {
   console.log('\n🎉 すべてのテストに合格しました！');

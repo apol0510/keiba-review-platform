@@ -68,6 +68,21 @@ const categoryForbiddenWords = {
 };
 
 /**
+ * 自動投稿専用のNGワード（具体的なサービス批判を避ける）
+ */
+const autoPostForbiddenWords = [
+  // サポート関連
+  'サポート', '対応が遅い', '返信がない', '連絡が取れない', '問い合わせ',
+
+  // 詐欺・悪質系
+  '詐欺', '騙された', '悪質', '詐欺サイト', '詐欺まがい',
+
+  // 具体的批判
+  '最悪', 'ひどい', '金返せ', '返金', '被害',
+  '訴える', '通報', '警察', '弁護士'
+];
+
+/**
  * 口コミに禁止ワードが含まれているかチェック
  */
 function containsForbiddenWords(text, category) {
@@ -79,6 +94,18 @@ function containsForbiddenWords(text, category) {
     }
   }
 
+  return false;
+}
+
+/**
+ * 自動投稿用の禁止ワードチェック
+ */
+function containsAutoPostForbiddenWords(text) {
+  for (const word of autoPostForbiddenWords) {
+    if (text.includes(word)) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -127,6 +154,7 @@ function loadReviewsFromFile(filePath) {
 
 /**
  * 評価別の口コミファイルを読み込み
+ * ⭐5は使用しない（過剰なポジティブ評価を避ける）
  */
 function loadAllReviews() {
   const reviewsDir = path.join(__dirname, 'reviews-data');
@@ -135,8 +163,8 @@ function loadAllReviews() {
     1: path.join(reviewsDir, '⭐1（辛口／クレーム寄り）.txt'),
     2: path.join(reviewsDir, '⭐2（少し辛口寄り）.txt'),
     3: path.join(reviewsDir, '⭐3（ニュートラル）.txt'),
-    4: path.join(reviewsDir, '⭐4（少しポジティブ寄り）.txt'),
-    5: path.join(reviewsDir, '⭐5（ポジティブ寄り） .txt')
+    4: path.join(reviewsDir, '⭐4（少しポジティブ寄り）.txt')
+    // ⭐5は使用しない
   };
 
   const allReviews = {};
@@ -173,13 +201,14 @@ function getSiteRating(siteName, maliciousSites) {
   );
 
   if (isMalicious) {
-    return { type: 'malicious', starRange: [1, 2] }; // 1-2★
+    return { type: 'malicious', starRange: [1, 3] }; // 1-3★（⭐4と⭐5は使用禁止）
   }
 
   // TODO: 優良サイト判定（将来実装）
 
-  // 不明サイト（デフォルト）
-  return { type: 'unknown', starRange: [3, 3] }; // 3★
+  // 通常サイト（デフォルト）
+  // ⭐2-4でランダム選択し、平均3程度になるように調整
+  return { type: 'normal', starRange: [2, 4] }; // 2-4★（⭐5は使用禁止）
 }
 
 /**
@@ -215,13 +244,21 @@ function generateReviewByRating(siteName, rating, category, allReviews) {
     const candidate = reviewList[Math.floor(Math.random() * reviewList.length)];
     const fullText = candidate.title + ' ' + candidate.content;
 
-    // 禁止ワードチェック
-    if (!containsForbiddenWords(fullText, category)) {
-      selectedReview = candidate;
-      break;
+    // カテゴリ別禁止ワードチェック
+    if (containsForbiddenWords(fullText, category)) {
+      attempts++;
+      continue;
     }
 
-    attempts++;
+    // 自動投稿用禁止ワードチェック（サポート批判など）
+    if (containsAutoPostForbiddenWords(fullText)) {
+      attempts++;
+      continue;
+    }
+
+    // 両方のチェックをパスした
+    selectedReview = candidate;
+    break;
   }
 
   // 適切な口コミが見つからない場合はデフォルト
