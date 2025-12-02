@@ -1,68 +1,22 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import SiteCard from '../../../components/SiteCard.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import EmptyState from '../../../components/EmptyState.astro';
-import Pagination from '../../../components/Pagination.astro';
+import PaginatedSiteList from '../../../components/PaginatedSiteList';
 import { getSitesWithStats, categoryLabels } from '../../../lib/airtable';
 
 const category = 'nankan';
 
-// クエリパラメータ取得
-const url = new URL(Astro.request.url);
-const searchQuery = url.searchParams.get('q') || '';
-const sortBy = url.searchParams.get('sort') || 'popular';
-const currentPage = parseInt(url.searchParams.get('page') || '1');
-const itemsPerPage = 20;
-
-// データ取得（カテゴリでフィルタ）
+// データ取得（カテゴリでフィルタ - クライアントサイドでページング）
 let sites = await getSitesWithStats();
 sites = sites.filter(site => site.category === category);
 
-// 検索フィルタ
-if (searchQuery) {
-  sites = sites.filter(
-    (site) =>
-      site.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      site.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-}
-
-// ソート
-switch (sortBy) {
-  case 'newest':
-    sites.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    break;
-  case 'rating':
-    sites.sort((a, b) => b.average_rating - a.average_rating);
-    break;
-  case 'reviews':
-    sites.sort((a, b) => b.review_count - a.review_count);
-    break;
-  case 'priority':
-    // 表示優先度でソート（高い順）、同じ優先度の場合は口コミ数順
-    sites.sort((a, b) => {
-      if (b.display_priority !== a.display_priority) {
-        return b.display_priority - a.display_priority;
-      }
-      return b.review_count - a.review_count;
-    });
-    break;
-  default: // popular (デフォルトは優先度順に変更)
-    sites.sort((a, b) => {
-      if (b.display_priority !== a.display_priority) {
-        return b.display_priority - a.display_priority;
-      }
-      return b.review_count - a.review_count;
-    });
-}
-
-// ページネーション
-const totalSites = sites.length;
-const totalPages = Math.ceil(totalSites / itemsPerPage);
-const startIndex = (currentPage - 1) * itemsPerPage;
-const endIndex = startIndex + itemsPerPage;
-const paginatedSites = sites.slice(startIndex, endIndex);
+// ランキングスコアを計算してソート
+const sitesWithScore = sites.map(site => ({
+  ...site,
+  rankingScore: (site.average_rating || 0) * Math.log(site.review_count + 1) * 10
+}));
+sitesWithScore.sort((a, b) => b.rankingScore - a.rankingScore);
 
 const breadcrumbItems = [
   { label: 'サイト一覧', href: '/keiba-yosou/' },
@@ -72,7 +26,7 @@ const breadcrumbItems = [
 
 <BaseLayout
   title={`${categoryLabels[category]}の予想サイト`}
-  description={`${categoryLabels[category]}専門の競馬予想サイト一覧。大井・川崎・船橋・浦和の予想情報を提供するサイトを比較。`}
+  description={`${categoryLabels[category]}の予想サイト一覧。口コミ・評判を比較できます。`}
 >
   <div class="max-w-6xl mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} />
@@ -81,11 +35,9 @@ const breadcrumbItems = [
       <div>
         <h1 class="text-2xl font-bold text-gray-900 mb-2">
           {categoryLabels[category]}の予想サイト
-          {searchQuery && <span class="text-lg font-normal text-gray-600">「{searchQuery}」の検索結果</span>}
         </h1>
         <div class="text-sm text-gray-600">
-          {totalSites}件のサイト
-          {totalPages > 1 && <span class="text-gray-500">（{currentPage} / {totalPages}ページ）</span>}
+          {sitesWithScore.length}件のサイト
         </div>
       </div>
       <div class="mt-4 md:mt-0">
@@ -99,54 +51,6 @@ const breadcrumbItems = [
           サイトを登録する
         </a>
       </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-8">
-      <form method="get" class="flex flex-col md:flex-row gap-4">
-        <div class="flex-1 relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
-          <input
-            type="text"
-            name="q"
-            value={searchQuery}
-            placeholder="サイト名やキーワードで検索..."
-            class="form-input pl-10 pr-10 w-full"
-          />
-          {searchQuery && (
-            <a
-              href="/keiba-yosou/nankan/"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-              title="検索をクリア"
-            >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </a>
-          )}
-        </div>
-        <div class="flex gap-2">
-          <label class="text-sm text-gray-600 flex items-center whitespace-nowrap">
-            並び替え:
-          </label>
-          <select name="sort" class="form-input w-auto">
-            <option value="popular" selected={sortBy === 'popular'}>人気順</option>
-            <option value="rating" selected={sortBy === 'rating'}>評価順</option>
-            <option value="reviews" selected={sortBy === 'reviews'}>口コミ数順</option>
-            <option value="newest" selected={sortBy === 'newest'}>新着順</option>
-          </select>
-          <button type="submit" class="btn-primary whitespace-nowrap">
-            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-            </svg>
-            絞り込む
-          </button>
-        </div>
-      </form>
     </div>
 
     <!-- Category Links -->
@@ -173,33 +77,10 @@ const breadcrumbItems = [
       }
     </div>
 
-    <!-- Site Grid -->
+    <!-- Site Grid with Client-side Pagination -->
     {
-      paginatedSites.length > 0 ? (
-        <>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {paginatedSites.map((site) => (
-              <SiteCard site={site} />
-            ))}
-          </div>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            baseUrl="/keiba-yosou/nankan/"
-            searchParams={{
-              ...(searchQuery && { q: searchQuery }),
-              ...(sortBy !== 'popular' && { sort: sortBy }),
-            }}
-          />
-        </>
-      ) : searchQuery ? (
-        <EmptyState
-          icon="search"
-          title="検索結果が見つかりません"
-          description={`「${searchQuery}」に一致するサイトが見つかりませんでした。別のキーワードで検索してみてください。`}
-          actionText="すべてのサイトを見る"
-          actionHref="/keiba-yosou/"
-        />
+      sitesWithScore.length > 0 ? (
+        <PaginatedSiteList sites={sitesWithScore} itemsPerPage={20} client:load />
       ) : (
         <EmptyState
           icon="document"
