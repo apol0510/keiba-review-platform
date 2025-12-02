@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import type { SiteWithStats } from '../lib/airtable';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
 
 export default function PaginatedSiteList({ sites, itemsPerPage = 20 }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   // ページネーション計算
   const totalPages = Math.ceil(sites.length / itemsPerPage);
@@ -52,14 +53,24 @@ export default function PaginatedSiteList({ sites, itemsPerPage = 20 }: Props) {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // ページトップにスクロール
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // ページ変更時にサイトグリッドの先頭にスクロール
+  useEffect(() => {
+    if (gridRef.current && currentPage > 1) {
+      const gridTop = gridRef.current.getBoundingClientRect().top + window.pageYOffset;
+      const offset = 100; // ヘッダー高さ + 余白
+      window.scrollTo({
+        top: gridTop - offset,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentPage]);
 
   return (
     <>
       {/* サイトグリッド */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {currentSites.map((site) => (
           <div
             key={site.id}
