@@ -90,6 +90,15 @@ node scripts/check-site-categories.cjs
 
 # カテゴリ一括更新
 node scripts/update-categories-to-chuo.cjs
+
+# サイト品質管理（悪質サイト追加・削除）
+node scripts/manage-site-quality.cjs list              # 悪質サイト一覧
+node scripts/manage-site-quality.cjs add "サイト名"    # 悪質サイトに追加
+node scripts/manage-site-quality.cjs remove "サイト名" # 悪質サイトから削除
+
+# ⭐5口コミ修正（Airtable同期）
+AIRTABLE_API_KEY=xxx AIRTABLE_BASE_ID=xxx node scripts/fix-star5-reviews.cjs check  # ⭐5口コミを検索
+AIRTABLE_API_KEY=xxx AIRTABLE_BASE_ID=xxx node scripts/fix-star5-reviews.cjs update # ⭐4に変更
 ```
 
 ---
@@ -413,7 +422,35 @@ node scripts/update-categories-to-chuo.cjs
 
 ---
 
-## 作業履歴（2025-12-01）
+## 作業履歴
+
+### 2025-12-02
+
+1. ✅ カテゴリ別禁止ワードフィルター実装
+   - 中央競馬: 南関・地方競馬関連ワードをブロック
+   - 南関競馬: 中央競馬G1レース関連ワードをブロック
+   - 地方競馬: JRA・南関競馬関連ワードをブロック
+
+2. ✅ 口コミ品質管理システム改善
+   - ⭐5評価の完全削除（過剰なポジティブ評価を回避）
+   - 評価範囲変更:
+     - 悪質サイト: ⭐1〜3（⭐4と⭐5は使用禁止）
+     - 通常サイト: ⭐2〜4（平均3程度、⭐5は使用禁止）
+   - 自動投稿専用NGワード追加:
+     - サポート関連: 「サポート」「対応が遅い」等
+     - 詐欺・悪質系: 「詐欺」「騙された」等
+     - 具体的批判: 「最悪」「ひどい」「金返せ」等
+
+3. ✅ サイト品質管理CLIツール作成
+   - `manage-site-quality.cjs` - 悪質サイトの簡単管理
+   - コマンド: list / add / remove / search
+
+4. ✅ Airtable既存データの修正
+   - ⭐5口コミ550件を⭐4に一括変更
+   - `fix-star5-reviews.cjs` スクリプト作成
+   - サイト詳細ページで⭐5が表示されなくなる
+
+### 2025-12-01
 
 ### 実施した作業
 1. ✅ トップページ最新口コミセクションの修正
