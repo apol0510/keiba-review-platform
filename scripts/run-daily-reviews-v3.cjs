@@ -257,10 +257,38 @@ function getSiteRating(siteName, maliciousSites) {
 }
 
 /**
- * 評価に基づいた口コミを生成
+ * 既存口コミの平均評価を取得
  */
-function generateReviewByRating(siteName, rating, category, allReviews) {
+async function getExistingAverageRating(siteName) {
+  try {
+    const reviews = await base('Reviews').select({
+      filterByFormula: `{Site} = "${siteName}"`,
+      fields: ['Rating']
+    }).all();
+
+    if (reviews.length === 0) {
+      return { average: 0, count: 0, ratings: [] };
+    }
+
+    const ratings = reviews.map(r => r.get('Rating') || 0);
+    const total = ratings.reduce((sum, r) => sum + r, 0);
+    const average = total / ratings.length;
+
+    return { average, count: ratings.length, ratings };
+  } catch (error) {
+    console.error('既存口コミ取得エラー:', error);
+    return { average: 0, count: 0, ratings: [] };
+  }
+}
+
+/**
+ * 評価に基づいた口コミを生成（既存口コミを考慮）
+ */
+async function generateReviewByRating(siteName, rating, category, allReviews) {
   const { type, starRange, weighted } = rating;
+
+  // 既存口コミの平均を取得
+  const existing = await getExistingAverageRating(siteName);
 
   // 星の数を決定
   let stars;
@@ -269,14 +297,49 @@ function generateReviewByRating(siteName, rating, category, allReviews) {
     stars = starRange[0];
   } else if (weighted && type === 'normal') {
     // 通常サイト用の重み付け選択（平均3.0〜3.2を目指す）
-    // ⭐2: 30%, ⭐3: 55%, ⭐4: 15%
-    const rand = Math.random();
-    if (rand < 0.30) {
-      stars = 2; // 30%
-    } else if (rand < 0.85) {
-      stars = 3; // 55%
+    const TARGET_AVERAGE = 3.1; // 目標平均
+
+    if (existing.count >= 3) {
+      // 既存口コミが3件以上ある場合、目標平均に近づける
+      const currentAverage = existing.average;
+
+      if (currentAverage > TARGET_AVERAGE + 0.3) {
+        // 平均が高すぎる（3.4以上） → ⭐2か⭐3で下げる
+        stars = Math.random() < 0.7 ? 2 : 3;
+        console.log(`    📊 平均調整: ${currentAverage.toFixed(2)} → 低評価を投稿 (⭐${stars})`);
+      } else if (currentAverage < TARGET_AVERAGE - 0.3) {
+        // 平均が低すぎる（2.8以下） → ⭐3か⭐4で上げる
+        stars = Math.random() < 0.6 ? 3 : 4;
+        console.log(`    📊 平均調整: ${currentAverage.toFixed(2)} → 高評価を投稿 (⭐${stars})`);
+      } else {
+        // 平均が目標範囲内 → ランダムだが⭐3を多めに
+        const rand = Math.random();
+        if (rand < 0.25) {
+          stars = 2; // 25%
+        } else if (rand < 0.85) {
+          stars = 3; // 60%
+        } else {
+          stars = 4; // 15%
+        }
+      }
+
+      // 連続同評価を防ぐ（最新3件が同じ評価の場合、強制的に変える）
+      const recent3 = existing.ratings.slice(-3);
+      if (recent3.length >= 3 && recent3.every(r => r === stars)) {
+        const alternatives = [2, 3, 4].filter(s => s !== stars);
+        stars = alternatives[Math.floor(Math.random() * alternatives.length)];
+        console.log(`    🔄 連続回避: 最新3件が⭐${recent3[0]} → ⭐${stars}に変更`);
+      }
     } else {
-      stars = 4; // 15%
+      // 口コミが少ない場合は従来の重み付け
+      const rand = Math.random();
+      if (rand < 0.30) {
+        stars = 2; // 30%
+      } else if (rand < 0.85) {
+        stars = 3; // 55%
+      } else {
+        stars = 4; // 15%
+      }
     }
   } else {
     // 通常のランダム選択
@@ -486,7 +549,7 @@ async function main() {
     console.log(`   カテゴリ: ${site.category}, タイプ: ${site.rating.type}`);
 
     for (let i = 0; i < site.reviewsToPost; i++) {
-      const review = generateReviewByRating(site.name, site.rating, site.category, allReviews);
+      const review = await generateReviewByRating(site.name, site.rating, site.category, allReviews);
 
       console.log(`  ${i + 1}/${site.reviewsToPost}: [${review.rating}★] ${review.title}`);
 
