@@ -252,7 +252,7 @@ function getSiteRating(siteName, maliciousSites) {
   // TODO: 優良サイト判定（将来実装）
 
   // 通常サイト（デフォルト）
-  // 平均評価を3.0〜3.2に抑えるため、重み付けランダム選択
+  // 平均評価を2.8〜3.2に維持するため、重み付けランダム選択
   return { type: 'normal', starRange: [2, 4], weighted: true }; // 2-4★（⭐5は使用禁止）
 }
 
@@ -296,23 +296,25 @@ async function generateReviewByRating(siteName, rating, category, allReviews) {
   if (starRange[0] === starRange[1]) {
     stars = starRange[0];
   } else if (weighted && type === 'normal') {
-    // 通常サイト用の重み付け選択（平均3.0〜3.2を目指す）
-    const TARGET_AVERAGE = 3.1; // 目標平均
+    // 通常サイト用の重み付け選択（平均2.8〜3.2を目指す）
+    const TARGET_MIN = 2.8; // 目標最小値
+    const TARGET_MAX = 3.2; // 目標最大値
+    const TARGET_AVERAGE = 3.0; // 目標中央値
 
     if (existing.count >= 3) {
       // 既存口コミが3件以上ある場合、目標平均に近づける
       const currentAverage = existing.average;
 
-      if (currentAverage > TARGET_AVERAGE + 0.3) {
-        // 平均が高すぎる（3.4以上） → ⭐2か⭐3で下げる
+      if (currentAverage > TARGET_MAX) {
+        // 平均が高すぎる（3.2超） → ⭐2か⭐3で下げる
         stars = Math.random() < 0.7 ? 2 : 3;
-        console.log(`    📊 平均調整: ${currentAverage.toFixed(2)} → 低評価を投稿 (⭐${stars})`);
-      } else if (currentAverage < TARGET_AVERAGE - 0.3) {
-        // 平均が低すぎる（2.8以下） → ⭐3か⭐4で上げる
+        console.log(`    📊 平均調整: ${currentAverage.toFixed(2)} > ${TARGET_MAX} → 低評価を投稿 (⭐${stars})`);
+      } else if (currentAverage < TARGET_MIN) {
+        // 平均が低すぎる（2.8未満） → ⭐3か⭐4で上げる
         stars = Math.random() < 0.6 ? 3 : 4;
-        console.log(`    📊 平均調整: ${currentAverage.toFixed(2)} → 高評価を投稿 (⭐${stars})`);
+        console.log(`    📊 平均調整: ${currentAverage.toFixed(2)} < ${TARGET_MIN} → 高評価を投稿 (⭐${stars})`);
       } else {
-        // 平均が目標範囲内 → ランダムだが⭐3を多めに
+        // 平均が目標範囲内（2.8〜3.2） → ランダムだが⭐3を多めに
         const rand = Math.random();
         if (rand < 0.25) {
           stars = 2; // 25%
