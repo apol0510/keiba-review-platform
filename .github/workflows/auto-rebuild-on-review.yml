@@ -27,30 +27,7 @@ jobs:
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
-        run: |
-          # 最終ビルド時刻をチェック（24時間以内に新規口コミがあるか）
-          node -e "
-          const Airtable = require('airtable');
-          const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
-
-          async function checkNewReviews() {
-            const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const records = await base('Reviews').select({
-              filterByFormula: \`AND({IsApproved} = TRUE(), IS_AFTER({CreatedAt}, '\${yesterday.toISOString()}'))\`,
-              maxRecords: 1
-            }).all();
-
-            if (records.length > 0) {
-              console.log('::set-output name=should_rebuild::true');
-              console.log('✅ 新しい口コミが見つかりました。再ビルドを実行します。');
-            } else {
-              console.log('::set-output name=should_rebuild::false');
-              console.log('ℹ️  新しい口コミはありません。再ビルドをスキップします。');
-            }
-          }
-
-          checkNewReviews().catch(console.error);
-          "
+        run: node scripts/check-new-reviews.cjs
 
       - name: Build
         if: steps.check.outputs.should_rebuild == 'true'
