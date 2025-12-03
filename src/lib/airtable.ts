@@ -448,23 +448,44 @@ export async function getSitesWithStats(): Promise<SiteWithStats[]> {
 }
 
 // 最新の口コミ取得
-export async function getLatestReviews(limit: number = 10): Promise<Review[]> {
+export async function getLatestReviews(limit: number = 10): Promise<ReviewWithSite[]> {
   const records = await base('Reviews').select({
     filterByFormula: '{IsApproved} = TRUE()',
     sort: [{ field: 'CreatedAt', direction: 'desc' }],
     maxRecords: limit
   }).all();
 
-  return records.map(record => ({
-    id: record.id,
-    siteId: record.fields.Site ? (record.fields.Site as string[])[0] : '',
-    siteName: record.fields['Site Name'] as string,
-    username: record.fields.UserName as string,
-    rating: record.fields.Rating as number,
-    title: record.fields.Title as string,
-    content: record.fields.Content as string,
-    status: 'approved' as ReviewStatus,
-    createdAt: record.fields.CreatedAt as string,
-    created_at: record.fields.CreatedAt as string // snake_caseエイリアス
-  }));
+  // サイト情報も取得するため、siteIdからSlugを引く
+  const reviewsWithSite = await Promise.all(
+    records.map(async (record) => {
+      const siteId = record.fields.Site ? (record.fields.Site as string[])[0] : '';
+      let siteSlug = '';
+
+      // siteIdからSlugを取得
+      if (siteId) {
+        try {
+          const siteRecord = await base('Sites').find(siteId);
+          siteSlug = siteRecord.fields.Slug as string || '';
+        } catch (error) {
+          console.error(`Error fetching site for review ${record.id}:`, error);
+        }
+      }
+
+      return {
+        id: record.id,
+        siteId,
+        siteName: record.fields['Site Name'] as string,
+        siteSlug,
+        username: record.fields.UserName as string,
+        rating: record.fields.Rating as number,
+        title: record.fields.Title as string,
+        content: record.fields.Content as string,
+        status: 'approved' as ReviewStatus,
+        createdAt: record.fields.CreatedAt as string,
+        created_at: record.fields.CreatedAt as string // snake_caseエイリアス
+      };
+    })
+  );
+
+  return reviewsWithSite;
 }
