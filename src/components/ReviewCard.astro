@@ -18,12 +18,16 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const hasSiteInfo = 'siteName' in review;
+const hasSiteInfo = 'siteName' in review && 'siteSlug' in review;
 const displayDate = review.created_at || review.createdAt || '';
 const displayUsername = review.username || 'anonymous';
+const siteUrl = hasSiteInfo && review.siteSlug ? `/keiba-yosou/${review.siteSlug}/` : '#';
 ---
 
-<div class="bg-white rounded-xl shadow-lg hover:shadow-xl p-5 md:p-6 transition-all duration-300 border border-slate-100">
+<a
+  href={siteUrl}
+  class="block bg-white rounded-xl shadow-lg hover:shadow-xl p-5 md:p-6 transition-all duration-300 border border-slate-100 hover:border-blue-300 cursor-pointer no-underline"
+>
   <div class="flex items-start justify-between mb-3">
     <div class="flex-1">
       <StarRating rating={review.rating} size="sm" />
@@ -33,13 +37,10 @@ const displayUsername = review.username || 'anonymous';
   </div>
 
   {
-    showSiteName && hasSiteInfo && review.siteName && (
-      <a
-        href={`/keiba-yosou/`}
-        class="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline mb-3 inline-block"
-      >
+    hasSiteInfo && review.siteName && (
+      <div class="text-sm font-medium text-blue-600 mb-3 inline-flex items-center gap-1">
         📍 {review.siteName}
-      </a>
+      </div>
     )
   }
 
@@ -56,14 +57,11 @@ const displayUsername = review.username || 'anonymous';
     </div>
 
     {
-      showSiteName && hasSiteInfo && review.siteName && (
-        <a
-          href={`/keiba-yosou/`}
-          class="text-xs md:text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
-        >
+      hasSiteInfo && review.siteName && (
+        <span class="text-xs md:text-sm text-blue-600 font-medium inline-flex items-center gap-1">
           詳細を見る →
-        </a>
+        </span>
       )
     }
   </div>
-</div>
+</a>
