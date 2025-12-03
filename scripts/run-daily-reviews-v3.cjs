@@ -252,20 +252,36 @@ function getSiteRating(siteName, maliciousSites) {
   // TODO: 優良サイト判定（将来実装）
 
   // 通常サイト（デフォルト）
-  // ⭐2-4でランダム選択し、平均3程度になるように調整
-  return { type: 'normal', starRange: [2, 4] }; // 2-4★（⭐5は使用禁止）
+  // 平均評価を3.0〜3.2に抑えるため、重み付けランダム選択
+  return { type: 'normal', starRange: [2, 4], weighted: true }; // 2-4★（⭐5は使用禁止）
 }
 
 /**
  * 評価に基づいた口コミを生成
  */
 function generateReviewByRating(siteName, rating, category, allReviews) {
-  const { type, starRange } = rating;
+  const { type, starRange, weighted } = rating;
 
   // 星の数を決定
-  const stars = starRange[0] === starRange[1]
-    ? starRange[0]
-    : Math.floor(Math.random() * (starRange[1] - starRange[0] + 1)) + starRange[0];
+  let stars;
+
+  if (starRange[0] === starRange[1]) {
+    stars = starRange[0];
+  } else if (weighted && type === 'normal') {
+    // 通常サイト用の重み付け選択（平均3.0〜3.2を目指す）
+    // ⭐2: 30%, ⭐3: 55%, ⭐4: 15%
+    const rand = Math.random();
+    if (rand < 0.30) {
+      stars = 2; // 30%
+    } else if (rand < 0.85) {
+      stars = 3; // 55%
+    } else {
+      stars = 4; // 15%
+    }
+  } else {
+    // 通常のランダム選択
+    stars = Math.floor(Math.random() * (starRange[1] - starRange[0] + 1)) + starRange[0];
+  }
 
   // 該当する評価の口コミリストを取得
   const reviewList = allReviews[stars];
