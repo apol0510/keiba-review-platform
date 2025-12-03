@@ -430,20 +430,9 @@ async function selectSitesToPost(maliciousSites, maxSites = 5) {
 
   const sitesWithPriority = sitesUnderLimit.map(site => {
     const maxReviews = MAX_REVIEWS_PER_SITE[site.rating.type] || MAX_REVIEWS_PER_SITE.normal;
-    let reviewsToPost = 1;
 
-    // 評価タイプに応じた投稿数
-    if (site.rating.type === 'malicious') {
-      reviewsToPost = Math.floor(Math.random() * 2) + 1; // 1-2件
-    } else if (site.rating.type === 'legit') {
-      reviewsToPost = Math.floor(Math.random() * 3) + 3; // 3-5件
-    } else {
-      reviewsToPost = Math.floor(Math.random() * 2) + 2; // 2-3件
-    }
-
-    // 上限を超えないように調整
-    const remainingSlots = maxReviews - site.reviewCount;
-    reviewsToPost = Math.min(reviewsToPost, remainingSlots);
+    // 連続投稿を避けるため、1サイト1件に制限
+    const reviewsToPost = 1;
 
     // 優先度を計算（口コミが少ないサイトを優先）
     const priority = 1000 - site.reviewCount + Math.random() * 100;
