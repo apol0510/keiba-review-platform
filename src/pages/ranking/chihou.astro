@@ -64,7 +64,7 @@ const description = `${categoryLabel}の競馬予想サイトランキング。�
               <a
                 href={`/ranking/${key}/`}
                 class={isActive
-                  ? 'px-5 py-2.5 rounded-full bg-blue-600 text-white text-sm font-bold shadow-md'
+                  ? 'px-5 py-2.5 rounded-full bg-white text-blue-600 text-sm font-bold border-2 border-blue-600 hover:bg-blue-50 transition-colors shadow-sm'
                   : 'px-5 py-2.5 rounded-full bg-white text-gray-700 text-sm font-medium border-2 border-gray-200 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-sm'}
               >
                 {label}
@@ -170,7 +170,7 @@ const description = `${categoryLabel}の競馬予想サイトランキング。�
                 <div class="mt-4 flex gap-2">
                   <a
                     href={`/keiba-yosou/${site.slug}/`}
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-600 text-sm font-medium rounded-lg transition-colors"
                   >
                     詳細を見る
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +182,7 @@ const description = `${categoryLabel}の競馬予想サイトランキング。�
                       href={site.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors"
                     >
                       公式サイト
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
