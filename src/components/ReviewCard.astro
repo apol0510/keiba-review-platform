@@ -20,7 +20,7 @@ const formatDate = (dateString: string) => {
 
 const hasSiteInfo = 'siteName' in review;
 const displayDate = review.created_at || review.createdAt || '';
-const displayUsername = ('username' in review ? review.username : '') || 'anonymous';
+const displayUsername = review.username || 'anonymous';
 ---
 
 <div class="bg-white rounded-xl shadow-lg hover:shadow-xl p-5 md:p-6 transition-all duration-300 border border-slate-100">
