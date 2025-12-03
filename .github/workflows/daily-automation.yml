@@ -2,8 +2,9 @@ name: Daily Site Discovery & Data Maintenance
 
 on:
   schedule:
-    # 毎日午前3時（JST）に実行 = UTC 18:00
-    - cron: '0 18 * * *'
+    # 毎週月曜日 午前3時（JST）に実行 = UTC 日曜日 18:00
+    # 無料プラン最適化: 週1回実行で年間使用可能
+    - cron: '0 18 * * 0'  # 日曜日18:00 UTC = 月曜日3:00 JST
   workflow_dispatch: # 手動実行も可能
 
 jobs:
