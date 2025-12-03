@@ -439,7 +439,7 @@ if (isCategory) {
                   href={`?${siteData.sortBy !== 'newest' ? `sort=${siteData.sortBy}` : ''}`}
                   class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     !siteData.filterRating
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-white border-2 border-blue-600 text-blue-600 shadow-sm'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -451,7 +451,7 @@ if (isCategory) {
                       href={`?filter_rating=${rating}${siteData.sortBy !== 'newest' ? `&sort=${siteData.sortBy}` : ''}`}
                       class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
                         siteData.filterRating === rating.toString()
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-white border-2 border-blue-600 text-blue-600 shadow-sm'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
