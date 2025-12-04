@@ -23,18 +23,24 @@ sitesWithRankingScore.sort((a, b) => b.rankingScore - a.rankingScore);
 const categories = ['nankan', 'chuo', 'chihou'] as const;
 const topSites = sitesWithRankingScore.slice(0, 10);
 
-// 構造化データ
+// 構造化データ（WebSiteスキーマ強化版）
 const siteUrl = import.meta.env.SITE_URL || 'https://keiba-review.com';
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: '競馬予想サイト口コミ',
+  alternateName: '競馬予想サイトレビュープラットフォーム',
   url: siteUrl,
-  description: '競馬予想サイトの口コミ・評判を集約。ユーザーの生の声で信頼できるサイトを見つけよう。',
+  description: '競馬予想サイトの口コミ・評判を集約。ユーザーの生の声で信頼できるサイトを見つけよう。南関競馬・中央競馬・地方競馬の予想サイトを徹底比較。',
+  inLanguage: 'ja-JP',
   publisher: {
     '@type': 'Organization',
     name: '競馬予想サイト口コミ',
     url: siteUrl,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${siteUrl}/og/default.png`
+    }
   },
   potentialAction: {
     '@type': 'SearchAction',
@@ -44,6 +50,32 @@ const structuredData = {
     },
     'query-input': 'required name=search_term_string',
   },
+  hasPart: [
+    {
+      '@type': 'WebPage',
+      name: '総合ランキング',
+      url: `${siteUrl}/ranking/`,
+      description: '競馬予想サイトの総合ランキングTOP30'
+    },
+    {
+      '@type': 'WebPage',
+      name: '中央競馬ランキング',
+      url: `${siteUrl}/ranking/chuo/`,
+      description: 'JRA・中央競馬に強い予想サイトランキング'
+    },
+    {
+      '@type': 'WebPage',
+      name: '南関競馬ランキング',
+      url: `${siteUrl}/ranking/nankan/`,
+      description: '大井・川崎・船橋・浦和に特化した予想サイトランキング'
+    },
+    {
+      '@type': 'WebPage',
+      name: '地方競馬ランキング',
+      url: `${siteUrl}/ranking/chihou/`,
+      description: '園田・金沢・名古屋・高知など地方競馬場に強い予想サイトランキング'
+    }
+  ]
 };
 ---
 

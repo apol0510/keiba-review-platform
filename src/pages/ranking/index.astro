@@ -88,6 +88,56 @@ const breadcrumbStructuredData = {
       </div>
     </div>
 
+    <!-- カテゴリ別TOP3ハイライト -->
+    <div class="mb-8 space-y-4">
+      {Object.entries(categoryLabels).map(([key, label]) => {
+        const categorySites = sites.filter(s => s.category === key).slice(0, 3);
+        if (categorySites.length === 0) return null;
+
+        const colorClasses = {
+          chuo: 'from-blue-50 to-cyan-50 border-blue-100 text-blue-600',
+          nankan: 'from-red-50 to-pink-50 border-red-100 text-red-600',
+          chihou: 'from-green-50 to-emerald-50 border-green-100 text-green-600'
+        };
+
+        return (
+          <div class={`bg-gradient-to-r ${colorClasses[key]} rounded-xl p-5 border`}>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class={`text-lg font-bold ${colorClasses[key].split(' ')[2]}`}>
+                🏆 {label} TOP3
+              </h3>
+              <a
+                href={`/ranking/${key}/`}
+                class={`text-sm font-medium ${colorClasses[key].split(' ')[2]} hover:underline`}
+              >
+                もっと見る →
+              </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {categorySites.map((site, index) => (
+                <a
+                  href={`/keiba-yosou/${site.slug}/`}
+                  class="bg-white rounded-lg p-4 hover:shadow-md transition-shadow border border-gray-100"
+                >
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl font-black text-gray-400">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                    </span>
+                    <span class="text-sm font-bold text-gray-900 truncate">{site.name}</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-gray-600">
+                    <span class="text-yellow-400">⭐</span>
+                    <span class="font-bold">{(site.average_rating || 0).toFixed(1)}</span>
+                    <span>({site.review_count}件)</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
     <!-- ランキング説明 -->
     <div class="bg-amber-50 border-l-4 border-amber-400 p-5 mb-8 rounded-r-lg">
       <h3 class="font-bold text-amber-900 mb-2 flex items-center gap-2">
