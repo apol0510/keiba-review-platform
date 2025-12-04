@@ -1,0 +1,182 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+
+const breadcrumbItems = [
+  { label: 'よくある質問' }
+];
+
+const faqs = [
+  {
+    question: '競馬予想サイトとは何ですか？',
+    answer: '競馬予想サイトとは、競馬レースの予想情報を提供するウェブサイトです。プロの予想家やAIによる分析、過去データに基づいた買い目情報などを提供し、競馬ファンの馬券購入をサポートします。無料で情報を提供するサイトから、有料会員制のサイトまで様々な形態があります。'
+  },
+  {
+    question: '無料の競馬予想サイトと有料サイトの違いは？',
+    answer: '無料サイトは基本的な予想情報やオッズ情報を無料で提供しますが、詳細な分析や高精度な予想は有料会員向けとなることが多いです。有料サイトでは、プロの予想家による詳細な分析、的中率の高い買い目、サポート体制などが充実しています。初心者の方はまず無料サイトで試してみることをおすすめします。'
+  },
+  {
+    question: '南関競馬と中央競馬の予想サイトの違いは？',
+    answer: '南関競馬（大井・川崎・船橋・浦和）と中央競馬（JRA）では、レースの特性やデータの蓄積が異なるため、それぞれに特化した予想サイトがあります。南関競馬は平日開催が多く、比較的少ない頭数でのレースが特徴です。中央競馬は週末開催が中心で、重賞レースなど大きなレースが多数あります。'
+  },
+  {
+    question: '競馬予想サイトの口コミは信頼できますか？',
+    answer: '当サイトでは、実際に利用したユーザーによる口コミを承認制で掲載しています。極端に良い評価や悪い評価だけでなく、複数の口コミを総合的に判断することが重要です。また、口コミ数が多く、継続的に投稿されているサイトの方が信頼性が高い傾向にあります。'
+  },
+  {
+    question: '予想サイトの的中率はどのくらいが目安ですか？',
+    answer: '競馬予想の的中率は、賭け式によって大きく異なります。単勝・複勝であれば30〜50%、馬連・馬単で20〜30%、3連複・3連単で10〜20%程度が一般的な目安です。ただし、的中率だけでなく回収率（投資額に対するリターン）も重要な指標となります。100%以上の回収率を維持できるサイトは優良と言えます。'
+  },
+  {
+    question: '競馬予想サイトを選ぶ際のポイントは？',
+    answer: '以下のポイントを確認することをおすすめします：1) 口コミ評価と投稿数の多さ、2) 無料予想の提供有無、3) 的中実績の公開状況、4) 料金体系の明確さ、5) サポート体制の充実度、6) 個人情報の取り扱い方針。また、複数のサイトを比較検討し、少額から始めることをおすすめします。'
+  },
+  {
+    question: '予想サイトの料金相場はどのくらいですか？',
+    answer: '有料予想サイトの料金は、月額5,000円〜30,000円程度が一般的です。単発の予想情報であれば、1レース500円〜5,000円程度で購入できるサイトもあります。高額な料金を請求するサイトもありますが、料金の高さと予想の精度は必ずしも比例しないため、口コミや実績をしっかり確認することが重要です。'
+  },
+  {
+    question: '競馬予想サイトの登録に必要な情報は？',
+    answer: '一般的には、メールアドレス、ニックネーム（またはユーザー名）、パスワードが必要です。有料サービスを利用する場合は、氏名、住所、電話番号、決済情報などの追加情報が必要になることがあります。個人情報の取り扱いについては、プライバシーポリシーを必ず確認しましょう。'
+  },
+  {
+    question: '悪質な競馬予想サイトの見分け方は？',
+    answer: '以下のような特徴がある場合は注意が必要です：1) 「絶対当たる」「100%的中」などの誇大広告、2) 高額な情報料金の前払いを要求、3) 的中実績の捏造や改ざん、4) 解約や退会が困難、5) 個人情報の不適切な取り扱い、6) サポート対応の不備。当サイトの口コミを参考に、評判の良いサイトを選びましょう。'
+  },
+  {
+    question: 'AI予想と人間の予想、どちらが当たりますか？',
+    answer: 'AI予想は膨大なデータを高速処理できる利点がありますが、馬の調子や騎手の状態など、数値化できない要素の判断は苦手です。一方、人間の予想家は経験と勘による判断ができますが、主観が入ることもあります。最近では、AIと人間の予想を組み合わせたハイブリッド型の予想サイトも増えています。'
+  }
+];
+
+// FAQPage構造化データ
+const faqStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(faq => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer
+    }
+  }))
+};
+---
+
+<BaseLayout
+  title="よくある質問（FAQ）| 競馬予想サイト口コミ比較"
+  description="競馬予想サイトに関するよくある質問をまとめました。予想サイトの選び方、料金相場、的中率の目安、悪質サイトの見分け方など、初心者の方にも分かりやすく解説しています。"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <Breadcrumb items={breadcrumbItems} />
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">
+        よくある質問（FAQ）
+      </h1>
+      <p class="text-gray-600 leading-relaxed">
+        競馬予想サイトに関するよくある質問をまとめました。サイト選びの参考にしてください。
+      </p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8 border border-blue-100">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">お探しの情報はこちらから</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <a href="/keiba-yosou/" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          競馬予想サイト一覧
+        </a>
+        <a href="/ranking/" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          総合ランキング
+        </a>
+        <a href="/keiba-yosou/nankan/" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          南関競馬予想サイト
+        </a>
+        <a href="/contact/" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          お問い合わせ
+        </a>
+      </div>
+    </div>
+
+    <!-- FAQ List -->
+    <div class="space-y-4">
+      {faqs.map((faq, index) => (
+        <details class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden group">
+          <summary class="cursor-pointer p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                Q{index + 1}
+              </div>
+              <div class="flex-1">
+                <h3 class="font-bold text-gray-900 text-lg group-open:text-blue-600 transition-colors">
+                  {faq.question}
+                </h3>
+              </div>
+              <svg class="w-6 h-6 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </summary>
+          <div class="px-6 pb-6">
+            <div class="flex items-start gap-4 pt-4 border-t border-gray-100">
+              <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-sm">
+                A
+              </div>
+              <div class="flex-1">
+                <p class="text-gray-700 leading-relaxed">
+                  {faq.answer}
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
+      ))}
+    </div>
+
+    <!-- CTA Section -->
+    <div class="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 text-center border border-blue-100">
+      <h2 class="text-2xl font-bold text-gray-900 mb-3">
+        お探しの情報が見つかりませんでしたか？
+      </h2>
+      <p class="text-gray-600 mb-6">
+        その他のご質問がございましたら、お気軽にお問い合わせください。
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a
+          href="/contact/"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-600 font-bold rounded-lg transition-colors shadow-sm"
+        >
+          お問い合わせ
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </a>
+        <a
+          href="/keiba-yosou/"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors"
+        >
+          サイト一覧を見る
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

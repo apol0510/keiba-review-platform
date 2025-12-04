@@ -63,6 +63,9 @@ let siteData: {
   filterRating: string | null;
   breadcrumbItems: { label: string; href?: string }[];
   structuredData: any;
+  breadcrumbStructuredData?: any;
+  metaDescription?: string;
+  relatedSites?: any[];
 } | null = null;
 
 if (isCategory) {
@@ -196,6 +199,75 @@ if (isCategory) {
     })),
   };
 
+  // BreadcrumbList構造化データ
+  const breadcrumbStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'ホーム',
+        item: 'https://keiba-review.com/'
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'サイト一覧',
+        item: 'https://keiba-review.com/keiba-yosou/'
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: categoryLabels[site.category],
+        item: `https://keiba-review.com/keiba-yosou/${site.category}/`
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: site.name,
+        item: `https://keiba-review.com/keiba-yosou/${site.slug}/`
+      }
+    ]
+  };
+
+  // SEO最適化されたメタディスクリプション生成
+  const generateMetaDescription = () => {
+    const categoryText = {
+      'nankan': '南関競馬',
+      'chuo': '中央競馬',
+      'chihou': '地方競馬'
+    }[site.category] || '競馬';
+
+    const ratingText = site.averageRating
+      ? `平均評価${site.averageRating.toFixed(1)}★`
+      : '';
+
+    const reviewCountText = site.reviewCount > 0
+      ? `${site.reviewCount}件の口コミ`
+      : '口コミ募集中';
+
+    // 最新口コミから特徴を抽出
+    const recentReview = reviews.length > 0 ? reviews[0] : null;
+    const featureText = recentReview
+      ? `「${recentReview.title}」など実際の利用者の声を掲載。`
+      : '実際の利用者による評価を確認できます。';
+
+    return `【${categoryText}予想サイト】${site.name}の${reviewCountText}を掲載。${ratingText}${ratingText && '。'}${featureText}無料予想・的中率・料金プランなど詳しい情報をチェック。`;
+  };
+
+  // 関連サイト取得（同じカテゴリで評価が高い上位6件、現在のサイトは除外）
+  const allSites = await getSitesWithStats();
+  const relatedSites = allSites
+    .filter(s => s.category === site.category && s.slug !== site.slug)
+    .sort((a, b) => {
+      // 評価×口コミ数でランキング
+      const scoreA = (a.average_rating || 0) * Math.log(a.review_count + 1);
+      const scoreB = (b.average_rating || 0) * Math.log(b.review_count + 1);
+      return scoreB - scoreA;
+    })
+    .slice(0, 6);
+
   siteData = {
     site,
     reviews,
@@ -209,6 +281,9 @@ if (isCategory) {
       { label: site.name },
     ],
     structuredData,
+    breadcrumbStructuredData,
+    metaDescription: generateMetaDescription(),
+    relatedSites,
   };
 }
 ---
@@ -305,10 +380,13 @@ if (isCategory) {
 ) : siteData ? (
   <BaseLayout
     title={`${siteData.site.name}の口コミ・評判`}
-    description={`${siteData.site.name}の口コミ${siteData.site.reviewCount}件を掲載。${siteData.site.averageRating ? `平均評価${siteData.site.averageRating.toFixed(1)}★。` : ''}実際の利用者による評価を確認できます。`}
+    description={siteData.metaDescription}
     ogImage={`/og/${siteData.site.slug}.png`}
   >
     <script type="application/ld+json" set:html={JSON.stringify(siteData.structuredData)} />
+    {siteData.breadcrumbStructuredData && (
+      <script type="application/ld+json" set:html={JSON.stringify(siteData.breadcrumbStructuredData)} />
+    )}
 
     <div class="max-w-6xl mx-auto px-4 py-8">
       <Breadcrumb items={siteData.breadcrumbItems} />
@@ -513,6 +591,36 @@ if (isCategory) {
           </div>
         </div>
       </div>
+
+      <!-- Related Sites Section -->
+      {siteData.relatedSites && siteData.relatedSites.length > 0 && (
+        <div class="mt-12">
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">
+              同じカテゴリの人気サイト
+            </h2>
+            <p class="text-gray-600">
+              {categoryLabels[siteData.site.category]}の他の予想サイトもチェックしてみましょう
+            </p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {siteData.relatedSites.map((site) => (
+              <SiteCard site={site} />
+            ))}
+          </div>
+          <div class="text-center mt-8">
+            <a
+              href={`/keiba-yosou/${siteData.site.category}/`}
+              class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-600 font-bold rounded-lg transition-colors shadow-sm"
+            >
+              {categoryLabels[siteData.site.category]}の全サイトを見る
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   </BaseLayout>
 ) : null}
