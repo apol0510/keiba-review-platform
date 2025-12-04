@@ -83,6 +83,30 @@ const description = sitesWithScore.length > 0
       }
     </div>
 
+    <!-- SEO Content Section -->
+    {sitesWithScore.length > 0 && (
+      <div class="bg-gradient-to-br from-slate-50 to-red-50/30 rounded-xl p-6 md:p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">
+          {categoryLabels[category]}予想サイトの選び方
+        </h2>
+        <div class="prose prose-slate max-w-none">
+          <p class="text-gray-700 leading-relaxed mb-4">
+            <strong>{categoryLabels[category]}</strong>は、大井・川崎・船橋・浦和の4競馬場で開催される地方競馬です。首都圏を中心に多くのファンに親しまれており、平日ナイター開催も特徴の一つです。TCK女王盃、東京湾カップ、川崎記念など、注目のレースが数多く開催されています。
+          </p>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            当カテゴリでは、<strong>{categoryLabels[category]}に特化した予想サイト</strong>を{sitesWithScore.length}件掲載しています。各サイトの<a href="/ranking/nankan/" class="text-blue-600 hover:text-blue-700 underline font-semibold">ランキング</a>や口コミ評価を参考に、あなたにぴったりのサイトを見つけてください。
+          </p>
+          <h3 class="text-lg font-bold text-gray-900 mb-3 mt-6">南関競馬予想サイトの特徴</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>平日ナイター開催に対応：</strong>仕事帰りでも楽しめる夜間レースの予想情報</li>
+            <li><strong>少頭数レースの攻略：</strong>6〜8頭立てのレースが多く、予想の精度が重要</li>
+            <li><strong>ダートコース特化：</strong>全競馬場がダートコースで、パワー型の馬が有利</li>
+            <li><strong>交流重賞の展望：</strong>中央馬が参戦する交流重賞レースの分析力</li>
+          </ul>
+        </div>
+      </div>
+    )}
+
     <!-- Site Grid with Client-side Pagination -->
     {
       sitesWithScore.length > 0 ? (

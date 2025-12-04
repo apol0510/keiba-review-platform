@@ -83,6 +83,30 @@ const description = sitesWithScore.length > 0
       }
     </div>
 
+    <!-- SEO Content Section -->
+    {sitesWithScore.length > 0 && (
+      <div class="bg-gradient-to-br from-slate-50 to-green-50/30 rounded-xl p-6 md:p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">
+          {categoryLabels[category]}予想サイトの選び方
+        </h2>
+        <div class="prose prose-slate max-w-none">
+          <p class="text-gray-700 leading-relaxed mb-4">
+            <strong>{categoryLabels[category]}</strong>は、NAR（地方競馬全国協会）に加盟する全国15の競馬場で開催されます。園田・姫路（兵庫）、金沢・笠松（北陸）、名古屋（愛知）、高知・佐賀など、各地域で特色あるレースが展開されています。
+          </p>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            当カテゴリでは、<strong>全国の{categoryLabels[category]}に特化した予想サイト</strong>を{sitesWithScore.length}件掲載しています。各サイトの<a href="/ranking/chihou/" class="text-blue-600 hover:text-blue-700 underline font-semibold">ランキング</a>や口コミ評価を参考に、あなたにぴったりのサイトを見つけてください。
+          </p>
+          <h3 class="text-lg font-bold text-gray-900 mb-3 mt-6">地方競馬予想サイトの特徴</h3>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li><strong>地域特化の情報：</strong>園田・金沢・名古屋など、各競馬場の特性に精通</li>
+            <li><strong>ほぼ毎日開催：</strong>平日も含めて年間を通じてレースが開催される</li>
+            <li><strong>ダート・芝両コース：</strong>競馬場によってダート・芝の違いがあり、それぞれに対応</li>
+            <li><strong>地元騎手・馬の分析：</strong>各地域で活躍する騎手や馬の詳細データ</li>
+          </ul>
+        </div>
+      </div>
+    )}
+
     <!-- Site Grid with Client-side Pagination -->
     {
       sitesWithScore.length > 0 ? (
