@@ -3,8 +3,9 @@ name: Auto Rebuild on New Review
 # 口コミ投稿時に自動でサイトを再ビルド
 on:
   schedule:
-    # 毎日AM5時に自動チェック（新しい口コミがあれば再ビルド）
-    - cron: '0 20 * * *' # UTC 20:00 = JST 05:00
+    # 毎日AM6時に自動チェック（新しい口コミがあれば再ビルド）
+    # auto-post-reviews.yml（AM4:00）の2時間後に実行してAPI衝突を回避
+    - cron: '0 21 * * *' # UTC 21:00 = JST 06:00
   workflow_dispatch: # 手動実行も可能
 
 jobs:

@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getSitesWithStats } from '../lib/airtable';
 
-const SITE_URL = import.meta.env.SITE_URL || 'https://keiba-review.com';
+const SITE_URL = import.meta.env.SITE || 'https://frabjous-taiyaki-460401.netlify.app';
 
 export const GET: APIRoute = async () => {
   // 承認済みサイトを取得
@@ -14,6 +14,10 @@ export const GET: APIRoute = async () => {
     { url: '/keiba-yosou/nankan/', priority: '0.8', changefreq: 'daily' },
     { url: '/keiba-yosou/chuo/', priority: '0.8', changefreq: 'daily' },
     { url: '/keiba-yosou/chihou/', priority: '0.8', changefreq: 'daily' },
+    { url: '/ranking/', priority: '0.9', changefreq: 'daily' },
+    { url: '/ranking/chuo/', priority: '0.8', changefreq: 'daily' },
+    { url: '/ranking/nankan/', priority: '0.8', changefreq: 'daily' },
+    { url: '/ranking/chihou/', priority: '0.8', changefreq: 'daily' },
     { url: '/about/', priority: '0.5', changefreq: 'monthly' },
     { url: '/terms/', priority: '0.3', changefreq: 'yearly' },
     { url: '/privacy/', priority: '0.3', changefreq: 'yearly' },

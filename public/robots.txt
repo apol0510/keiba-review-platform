@@ -1,9 +1,10 @@
+# https://frabjous-taiyaki-460401.netlify.app/robots.txt
+
 User-agent: *
 Allow: /
 
-# Admin pages
-Disallow: /admin/
-Disallow: /api/
+# サイトマップ
+Sitemap: https://frabjous-taiyaki-460401.netlify.app/sitemap.xml
 
-# Sitemap
-Sitemap: https://keiba-review.com/sitemap.xml
+# クロール速度調整（Googlebotなど）
+Crawl-delay: 1

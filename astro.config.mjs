@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://frabjous-taiyaki-460401.netlify.app',
   integrations: [react()],
   output: 'static', // 完全静的生成（Airtableから事前生成）
   vite: {
