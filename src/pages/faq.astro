@@ -102,13 +102,37 @@ const faqStructuredData = {
     }
   }))
 };
+
+// BreadcrumbList構造化データ
+const breadcrumbStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'ホーム',
+      item: 'https://keiba-review.com/'
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'よくある質問',
+      item: 'https://keiba-review.com/faq/'
+    }
+  ]
+};
 ---
 
 <BaseLayout
   title="よくある質問（FAQ）| 競馬予想サイト口コミ比較"
   description="競馬予想サイトに関するよくある質問をまとめました。予想サイトの選び方、料金相場、的中率の目安、悪質サイトの見分け方など、初心者の方にも分かりやすく解説しています。"
 >
+  <!-- FAQPage構造化データ -->
   <script type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+
+  <!-- BreadcrumbList構造化データ -->
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} />
 
   <div class="max-w-4xl mx-auto px-4 py-8">
     <Breadcrumb items={breadcrumbItems} />

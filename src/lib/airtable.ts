@@ -95,12 +95,19 @@ export async function getAllSites(): Promise<Site[]> {
 
 // 承認済みサイト取得
 export async function getApprovedSites(): Promise<Site[]> {
+  // キャッシュチェック
+  const cacheKey = 'approved_sites';
+  const cached = getCached<Site[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const records = await base('Sites').select({
     filterByFormula: '{IsApproved} = TRUE()',
     sort: [{ field: 'DisplayPriority', direction: 'desc' }, { field: 'CreatedAt', direction: 'desc' }]
   }).all();
 
-  return records.map(record => ({
+  const sites = records.map(record => ({
     id: record.id,
     name: record.fields.Name as string,
     slug: record.fields.Slug as string,
@@ -114,6 +121,10 @@ export async function getApprovedSites(): Promise<Site[]> {
     averageRating: record.fields['Average Rating'] as number,
     createdAt: record.fields.CreatedAt as string
   }));
+
+  // キャッシュに保存
+  setCache(cacheKey, sites);
+  return sites;
 }
 
 // カテゴリ別サイト取得

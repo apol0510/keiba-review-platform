@@ -32,7 +32,7 @@ const recentUsernames = new Set();
  * これ以上口コミが増えないようにして、不自然さを回避
  */
 const MAX_REVIEWS_PER_SITE = {
-  legitimate: 80, // 優良サイト: 最大80件（人気サイトは口コミが多い）
+  excellent: 80,  // 優良サイト: 最大80件（人気サイトは口コミが多い）
   normal: 30,     // 通常サイト: 最大30件（適度な数で信頼性維持）
   malicious: 50   // 悪質サイト: 最大50件（多くの人が被害報告するのは自然）
 };
@@ -228,52 +228,45 @@ function loadAllReviews() {
 }
 
 /**
- * サイト品質設定を読み込み
+ * 投稿確率設定（Airtableの SiteQuality に基づく）
  */
-function loadSiteRatings() {
-  const ratingPath = path.join(__dirname, 'config/site-ratings.json');
-
-  if (!fs.existsSync(ratingPath)) {
-    console.warn('⚠️  site-ratings.jsonが見つかりません');
-    return { legitimate: [], malicious: [], postingFrequency: {} };
-  }
-
-  const data = JSON.parse(fs.readFileSync(ratingPath, 'utf-8'));
-  return {
-    legitimate: data.legitimate || [],
-    malicious: data.malicious || [],
-    postingFrequency: data.postingFrequency || {
-      legitimate: 1.0,   // 100% (毎日)
-      normal: 0.33,      // 33% (約3日に1回)
-      malicious: 0.2     // 20% (約5日に1回)
-    }
-  };
-}
+const POSTING_FREQUENCY = {
+  excellent: 1.0,   // 100% (毎日)
+  normal: 0.33,     // 33% (約3日に1回)
+  malicious: 0.2    // 20% (約5日に1回)
+};
 
 /**
- * サイトの評価を取得（優良/通常/悪質）
+ * サイトの評価を取得（Airtable SiteQuality フィールドから取得）
  */
-function getSiteRating(siteName, siteRatings) {
-  // 優良サイトチェック
-  const isLegitimate = siteRatings.legitimate.some(legitName =>
-    siteName.includes(legitName) || legitName.includes(siteName)
-  );
+function getSiteRating(siteQuality) {
+  // Airtableの SiteQuality フィールドから品質を判定
+  const quality = siteQuality || 'normal'; // デフォルトは通常
 
-  if (isLegitimate) {
-    return { type: 'legitimate', starRange: [3, 4], weighted: true, probability: siteRatings.postingFrequency.legitimate };
+  if (quality === 'excellent') {
+    return {
+      type: 'excellent',
+      starRange: [3, 4],
+      weighted: true,
+      probability: POSTING_FREQUENCY.excellent
+    };
   }
 
-  // 悪質サイトチェック
-  const isMalicious = siteRatings.malicious.some(maliciousName =>
-    siteName.includes(maliciousName) || maliciousName.includes(siteName)
-  );
-
-  if (isMalicious) {
-    return { type: 'malicious', starRange: [1, 3], probability: siteRatings.postingFrequency.malicious };
+  if (quality === 'malicious') {
+    return {
+      type: 'malicious',
+      starRange: [1, 3],
+      probability: POSTING_FREQUENCY.malicious
+    };
   }
 
   // 通常サイト（デフォルト）
-  return { type: 'normal', starRange: [2, 4], weighted: true, probability: siteRatings.postingFrequency.normal };
+  return {
+    type: 'normal',
+    starRange: [2, 4],
+    weighted: true,
+    probability: POSTING_FREQUENCY.normal
+  };
 }
 
 /**
@@ -557,11 +550,12 @@ async function generateReviewByRating(siteName, rating, category, allReviews) {
 /**
  * 投稿すべきサイトを選択
  */
-async function selectSitesToPost(maliciousSites, maxSites = 5) {
+async function selectSitesToPost(maxSites = 5) {
   console.log('📊 投稿対象サイトを選択中...\n');
 
   const allSites = await base('Sites').select({
-    filterByFormula: '{IsApproved} = TRUE()'
+    filterByFormula: '{IsApproved} = TRUE()',
+    fields: ['Name', 'Category', 'Reviews', 'SiteQuality']
   }).all();
 
   const sitesWithReviewCount = await Promise.all(
@@ -569,14 +563,17 @@ async function selectSitesToPost(maliciousSites, maxSites = 5) {
       const reviews = siteRecord.fields.Reviews || [];
       const reviewCount = Array.isArray(reviews) ? reviews.length : 0;
 
-      const rating = getSiteRating(siteRecord.fields.Name, maliciousSites);
+      // AirtableのSiteQualityフィールドから品質を取得
+      const siteQuality = siteRecord.fields.SiteQuality;
+      const rating = getSiteRating(siteQuality);
 
       return {
         id: siteRecord.id,
         name: siteRecord.fields.Name,
         category: siteRecord.fields.Category || 'other',
         reviewCount,
-        rating
+        rating,
+        siteQuality: siteQuality || 'normal'
       };
     })
   );
@@ -648,11 +645,8 @@ async function main() {
   const totalReviewsCount = Object.values(allReviews).reduce((sum, reviews) => sum + reviews.length, 0);
   console.log(`\n✅ 合計 ${totalReviewsCount}件の口コミを読み込みました\n`);
 
-  // サイト品質設定を読み込み
-  const siteRatings = loadSiteRatings();
-  console.log(`✅ 優良サイト: ${siteRatings.legitimate.length}件`);
-  console.log(`✅ 悪質サイト: ${siteRatings.malicious.length}件`);
-  console.log(`📊 投稿頻度: 優良 ${(siteRatings.postingFrequency.legitimate * 100).toFixed(0)}%, 通常 ${(siteRatings.postingFrequency.normal * 100).toFixed(0)}%, 悪質 ${(siteRatings.postingFrequency.malicious * 100).toFixed(0)}%\n`);
+  // 投稿頻度設定を表示
+  console.log(`📊 投稿頻度設定: 優良 ${(POSTING_FREQUENCY.excellent * 100).toFixed(0)}%, 通常 ${(POSTING_FREQUENCY.normal * 100).toFixed(0)}%, 悪質 ${(POSTING_FREQUENCY.malicious * 100).toFixed(0)}%\n`);
 
   // 環境変数でラウンド数を制御（デフォルト: 1ラウンド）
   const rounds = parseInt(process.env.REVIEW_ROUNDS || '1', 10);
@@ -666,11 +660,11 @@ async function main() {
     console.log('='.repeat(60) + '\n');
 
     // 投稿対象サイトを選択（0 = 全サイト対象）
-    const targetSites = await selectSitesToPost(siteRatings, 0);
+    const targetSites = await selectSitesToPost(0);
 
     console.log(`📝 ${targetSites.length}サイトに口コミを投稿します:\n`);
     targetSites.forEach((site, i) => {
-      const typeLabel = site.rating.type === 'legitimate' ? '✅優良' :
+      const typeLabel = site.rating.type === 'excellent' ? '✅優良' :
                         site.rating.type === 'malicious' ? '❌悪質' : '⚪通常';
       console.log(`  ${i + 1}. ${typeLabel} ${site.name} (${site.reviewCount}/${site.maxReviews}件 → +${site.reviewsToPost}件)`);
     });

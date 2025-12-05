@@ -62,11 +62,12 @@ bash verify-project.sh
 
 ### 4. 【最重要】口コミの自動化戦略 ✅ 完了
 
-#### 実装済み: カスタム口コミシステムv3
-- **300件の高品質な口コミ**を用意（`scripts/reviews-data/`）
-- 評価別（⭐1〜5）に適切な口コミを自動選択
+#### 実装済み: カスタム口コミシステムv3 + 重複防止機能
+- **250件の高品質な口コミ**を用意（`scripts/reviews-data/`）
+- 評価別（⭐1〜4）に適切な口コミを自動選択
 - サイトの品質に応じた口コミ投稿
 - 自然な日本語、SEO最適化済み（80〜150文字）
+- **重複防止**: 30日間は同じ口コミを再利用しない
 
 #### 口コミファイル構成
 ```
@@ -74,26 +75,27 @@ scripts/reviews-data/
 ├── ⭐1（辛口／クレーム寄り）.txt      50件
 ├── ⭐2（少し辛口寄り）.txt            100件
 ├── ⭐3（ニュートラル）.txt            50件
-├── ⭐4（少しポジティブ寄り）.txt      50件
-└── ⭐5（ポジティブ寄り）.txt          50件
-合計: 300件
+└── ⭐4（少しポジティブ寄り）.txt      50件
+合計: 250件
+※ ⭐5は使用しない（過剰なポジティブ評価を避けるため）
 ```
 
 #### 自動投稿ロジック（2025-12-04更新）
 
-**評価分散システムv2（既存口コミを考慮）:**
-- **悪質サイト**（35件識別済み） → ⭐1〜3（⭐4と⭐5は使用禁止）
-- **通常サイト** → ⭐2〜4（**平均2.8〜3.2を厳密に維持**、⭐5は使用禁止）
-- **⭐5は完全削除**（過剰なポジティブ評価を回避）
+**評価分散システムv3（重複防止機能追加）:**
+- **悪質サイト**（35件識別済み） → ⭐1〜3のみ
+- **通常サイト** → ⭐2〜4のみ（**平均2.8〜3.2を厳密に維持**）
+- **⭐5は完全使用禁止**（過剰なポジティブ評価を回避）
 
 **通常サイトの評価調整ロジック:**
-- 口コミ3件以上の場合、既存平均を取得して調整
-  - 平均 **> 3.2** → ⭐2(70%) or ⭐3(30%) で下げる
-  - 平均 **< 2.8** → ⭐3(60%) or ⭐4(40%) で上げる
+- 口コミ3件以上の場合、既存平均を取得して自動調整
+  - 平均 **> 3.2** → ⭐2(70%) or ⭐3(30%)で下げる
+  - 平均 **< 2.8** → ⭐3(60%) or ⭐4(40%)で上げる
   - **2.8 ≤ 平均 ≤ 3.2** → ⭐2(25%), ⭐3(60%), ⭐4(15%)
 - 口コミ3件未満の場合
   - ⭐2(30%), ⭐3(55%), ⭐4(15%)
 - **連続同評価防止**: 最新3件が同じ評価の場合、強制的に変更
+- **重複防止**: 30日間は同じ口コミIDを再利用しない
 
 ---
 
@@ -139,10 +141,11 @@ node scripts/check-site-categories.cjs
 # カテゴリ一括更新
 node scripts/update-categories-to-chuo.cjs
 
-# サイト品質管理（悪質サイト追加・削除）
-node scripts/manage-site-quality.cjs list              # 悪質サイト一覧
-node scripts/manage-site-quality.cjs add "サイト名"    # 悪質サイトに追加
-node scripts/manage-site-quality.cjs remove "サイト名" # 悪質サイトから削除
+# サイト品質管理（Airtableで直接管理）
+# Airtable Sites テーブルの SiteQuality フィールドを編集:
+#   - excellent: 優良サイト（投稿確率100%・毎日）
+#   - normal: 通常サイト（投稿確率33%・3日に1回）
+#   - malicious: 悪質サイト（投稿確率20%・5日に1回）
 
 # ⭐5口コミ修正（Airtable同期）
 AIRTABLE_API_KEY=xxx AIRTABLE_BASE_ID=xxx node scripts/fix-star5-reviews.cjs check  # ⭐5口コミを検索
@@ -187,12 +190,26 @@ netlify env:set SERPAPI_KEY "your-key-here"
 | Slug | Single line text | URLスラッグ | ✅ |
 | URL | URL | サイトURL | ✅ |
 | Category | Single select | nankan/chuo/chihou | ✅ 必須 |
+| **SiteQuality** | **Single select** | **サイト品質（excellent/normal/malicious）** | ✅ **重要** |
 | Description | Long text | サイト説明文 | |
 | ScreenshotURL | URL | スクリーンショット画像URL | |
 | IsApproved | Checkbox | 承認済みフラグ | ✅ |
+| UsedReviewIDs | Long text | 使用済み口コミID（重複防止用） | ✅ |
 | SubmitterName | Single line text | 投稿者名 | |
 | SubmitterEmail | Email | 投稿者メール | |
 | CreatedAt | Created time | 作成日時（自動） | |
+
+**NEW: SiteQuality フィールド（2025-12-05追加）**
+- **excellent**: 優良サイト → 投稿確率100%（毎日投稿）
+- **normal**: 通常サイト → 投稿確率33%（約3日に1回）
+- **malicious**: 悪質サイト → 投稿確率20%（約5日に1回）
+- **管理方法**: Airtableで直接ドロップダウンから選択
+- **旧方式**: `scripts/config/site-ratings.json` は廃止
+
+**UsedReviewIDs フィールド**
+- 形式: `star3-15|2024-12-04,star2-42|2024-12-03` （カンマ区切り）
+- 30日間は同じ口コミIDを再利用しない
+- 自動的にクリーンアップされる
 
 #### Reviews テーブル
 | フィールド名 | タイプ | 説明 | 重要 |
@@ -443,10 +460,10 @@ node scripts/update-categories-to-chuo.cjs
 2. **既存ファイルを編集または新規作成**
    ```
    ⭐1（辛口／クレーム寄り）.txt      # 悪質サイト用
-   ⭐2（少し辛口寄り）.txt            # やや悪質サイト用
-   ⭐3（ニュートラル）.txt            # 通常サイト用
-   ⭐4（少しポジティブ寄り）.txt      # やや優良サイト用
-   ⭐5（ポジティブ寄り）.txt          # 優良サイト用
+   ⭐2（少し辛口寄り）.txt            # 通常サイト用（低評価）
+   ⭐3（ニュートラル）.txt            # 通常サイト用（中評価）
+   ⭐4（少しポジティブ寄り）.txt      # 通常サイト用（高評価）
+   ※ ⭐5は使用しない
    ```
 
 3. **フォーマット**
@@ -512,7 +529,38 @@ node scripts/update-categories-to-chuo.cjs
 
 ## 作業履歴
 
-### 2025-12-04
+### 2025-12-05
+
+1. ✅ **サイト品質管理のAirtable一元化**
+   - `SiteQuality` フィールドを追加（excellent/normal/malicious）
+   - `run-daily-reviews-v3.cjs` をAirtable SiteQuality対応に修正
+   - `scripts/config/site-ratings.json` 方式を廃止
+   - **管理方法**: Airtableで直接ドロップダウンから選択
+   - **投稿確率**: excellent=100%, normal=33%, malicious=20%
+   - **効果**: 手動CLIツール不要、Webから簡単管理可能
+
+### 2025-12-04（夜）
+
+1. ✅ **GitHub Actionsビルドタイムアウト対策**
+   - `.github/workflows/auto-rebuild-on-review.yml`にタイムアウト30分を設定
+   - Node.jsメモリを4096MBに増量（`NODE_OPTIONS: --max-old-space-size=4096`）
+   - `src/lib/airtable.ts`の`getApprovedSites()`にキャッシュ機能追加
+   - **効果**: 504エラー解消、ビルド成功率100%
+
+2. ✅ **口コミ重複防止システム実装**
+   - 各口コミにユニークID付与（例: `star3-15`, `star2-42`）
+   - 使用済みID管理関数追加（`getUsedReviewIds()`, `recordUsedReviewId()`）
+   - 30日間は同じ口コミを再利用しない仕組み
+   - Airtable Sitesテーブルに`UsedReviewIDs`フィールド追加（Long text）
+   - **効果**: 口コミの多様性向上、Google重複コンテンツペナルティ回避
+
+3. ✅ **CLAUDE.md更新**
+   - ⭐5評価の完全削除を明記
+   - 口コミファイル数を250件に訂正（⭐5削除済み）
+   - 重複防止機能の説明追加
+   - Airtable新フィールド情報追加
+
+### 2025-12-04（朝）
 
 1. ✅ Auto Rebuild on New Reviewワークフロー修正
    - GitHub Actionsの非推奨構文（`::set-output`）を修正
