@@ -198,7 +198,7 @@ function loadReviewsFromFile(filePath) {
 }
 
 /**
- * 評価別の口コミファイルを読み込み
+ * 評価別の口コミファイルを読み込み（IDを付与）
  * ⭐5は使用しない（過剰なポジティブ評価を避ける）
  */
 function loadAllReviews() {
@@ -215,7 +215,12 @@ function loadAllReviews() {
   const allReviews = {};
 
   for (const [rating, filePath] of Object.entries(reviewFiles)) {
-    allReviews[rating] = loadReviewsFromFile(filePath);
+    const reviews = loadReviewsFromFile(filePath);
+    // 各口コミにユニークIDを付与
+    allReviews[rating] = reviews.map((review, index) => ({
+      ...review,
+      id: `star${rating}-${index}`
+    }));
     console.log(`  ⭐${rating}: ${allReviews[rating].length}件の口コミを読み込み`);
   }
 
@@ -254,6 +259,77 @@ function getSiteRating(siteName, maliciousSites) {
   // 通常サイト（デフォルト）
   // 平均評価を2.8〜3.2に維持するため、重み付けランダム選択
   return { type: 'normal', starRange: [2, 4], weighted: true }; // 2-4★（⭐5は使用禁止）
+}
+
+/**
+ * 使用済み口コミIDを取得（30日以内）
+ */
+async function getUsedReviewIds(siteName) {
+  try {
+    const sites = await base('Sites').select({
+      filterByFormula: `{Name} = "${siteName}"`,
+      fields: ['UsedReviewIDs']
+    }).all();
+
+    if (sites.length === 0) {
+      return [];
+    }
+
+    const usedIdsField = sites[0].get('UsedReviewIDs');
+    if (!usedIdsField) {
+      return [];
+    }
+
+    // 形式: "star3-15|2024-12-04,star2-42|2024-12-03"
+    const entries = usedIdsField.split(',');
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    // 30日以内のIDのみを返す
+    return entries
+      .map(entry => {
+        const [id, dateStr] = entry.split('|');
+        return { id, date: new Date(dateStr) };
+      })
+      .filter(({ date }) => date >= thirtyDaysAgo)
+      .map(({ id }) => id);
+  } catch (error) {
+    console.error('使用済みID取得エラー:', error);
+    return [];
+  }
+}
+
+/**
+ * 使用済み口コミIDを記録
+ */
+async function recordUsedReviewId(siteName, reviewId) {
+  try {
+    const sites = await base('Sites').select({
+      filterByFormula: `{Name} = "${siteName}"`,
+      fields: ['UsedReviewIDs']
+    }).all();
+
+    if (sites.length === 0) {
+      console.warn(`⚠️  サイト「${siteName}」が見つかりません`);
+      return;
+    }
+
+    const siteRecord = sites[0];
+    const usedIdsField = siteRecord.get('UsedReviewIDs') || '';
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // 新しいIDを追加
+    const newEntry = `${reviewId}|${today}`;
+    const updatedIds = usedIdsField ? `${usedIdsField},${newEntry}` : newEntry;
+
+    // Airtableに保存
+    await base('Sites').update(siteRecord.id, {
+      UsedReviewIDs: updatedIds
+    });
+
+    console.log(`    💾 使用済みID記録: ${reviewId}`);
+  } catch (error) {
+    console.error('使用済みID記録エラー:', error);
+  }
 }
 
 /**
@@ -361,6 +437,9 @@ async function generateReviewByRating(siteName, rating, category, allReviews) {
     };
   }
 
+  // 使用済み口コミIDを取得
+  const usedReviewIds = await getUsedReviewIds(siteName);
+
   // カテゴリに適した口コミを探す（最大20回試行）
   let selectedReview = null;
   let attempts = 0;
@@ -369,6 +448,12 @@ async function generateReviewByRating(siteName, rating, category, allReviews) {
   while (attempts < maxAttempts) {
     const candidate = reviewList[Math.floor(Math.random() * reviewList.length)];
     const fullText = candidate.title + ' ' + candidate.content;
+
+    // 重複チェック（30日以内に使用したIDは除外）
+    if (usedReviewIds.includes(candidate.id)) {
+      attempts++;
+      continue;
+    }
 
     // カテゴリ別禁止ワードチェック
     if (containsForbiddenWords(fullText, category)) {
@@ -496,8 +581,10 @@ async function selectSitesToPost(maliciousSites, maxSites = 5) {
   const sitesWithPriority = sitesUnderLimit.map(site => {
     const maxReviews = MAX_REVIEWS_PER_SITE[site.rating.type] || MAX_REVIEWS_PER_SITE.normal;
 
-    // 連続投稿を避けるため、1サイト1件に制限
-    const reviewsToPost = 1;
+    // 環境変数で投稿件数を制御（デフォルト: 1件）
+    const reviewsPerSite = parseInt(process.env.REVIEWS_PER_SITE || '1', 10);
+    const remainingSlots = maxReviews - site.reviewCount;
+    const reviewsToPost = Math.min(reviewsPerSite, remainingSlots);
 
     // 優先度を計算（口コミが少ないサイトを優先）
     const priority = 1000 - site.reviewCount + Math.random() * 100;
@@ -512,7 +599,8 @@ async function selectSitesToPost(maliciousSites, maxSites = 5) {
 
   sitesWithPriority.sort((a, b) => b.priority - a.priority);
 
-  return sitesWithPriority.slice(0, maxSites);
+  // maxSitesが0の場合は全サイト対象
+  return maxSites > 0 ? sitesWithPriority.slice(0, maxSites) : sitesWithPriority;
 }
 
 /**
@@ -532,52 +620,88 @@ async function main() {
   const maliciousSites = loadMaliciousSites();
   console.log(`✅ 悪質サイト: ${maliciousSites.length}件\n`);
 
-  // 投稿対象サイトを選択
-  const targetSites = await selectSitesToPost(maliciousSites, 5);
+  // 環境変数でラウンド数を制御（デフォルト: 2ラウンド）
+  const rounds = parseInt(process.env.REVIEW_ROUNDS || '2', 10);
 
-  console.log(`📝 ${targetSites.length}サイトに口コミを投稿します:\n`);
-  targetSites.forEach((site, i) => {
-    const typeLabel = site.rating.type === 'malicious' ? '❌悪質' :
-                      site.rating.type === 'legit' ? '✅優良' : '⚪不明';
-    console.log(`  ${i + 1}. ${typeLabel} ${site.name} (${site.reviewCount}/${site.maxReviews}件 → +${site.reviewsToPost}件)`);
-  });
-  console.log('');
+  let grandTotalReviews = 0;
+  let grandSuccessCount = 0;
 
-  let totalReviews = 0;
-  let successCount = 0;
+  for (let round = 1; round <= rounds; round++) {
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`🔄 ラウンド ${round}/${rounds} を開始`);
+    console.log('='.repeat(60) + '\n');
 
-  for (const site of targetSites) {
-    console.log(`\n🎯 ${site.name} に口コミを投稿中...`);
-    console.log(`   カテゴリ: ${site.category}, タイプ: ${site.rating.type}`);
+    // 投稿対象サイトを選択（0 = 全サイト対象）
+    const targetSites = await selectSitesToPost(maliciousSites, 0);
 
-    for (let i = 0; i < site.reviewsToPost; i++) {
-      const review = await generateReviewByRating(site.name, site.rating, site.category, allReviews);
+    console.log(`📝 ${targetSites.length}サイトに口コミを投稿します:\n`);
+    targetSites.forEach((site, i) => {
+      const typeLabel = site.rating.type === 'malicious' ? '❌悪質' :
+                        site.rating.type === 'legit' ? '✅優良' : '⚪不明';
+      console.log(`  ${i + 1}. ${typeLabel} ${site.name} (${site.reviewCount}/${site.maxReviews}件 → +${site.reviewsToPost}件)`);
+    });
+    console.log('');
 
-      console.log(`  ${i + 1}/${site.reviewsToPost}: [${review.rating}★] ${review.title}`);
+    let totalReviews = 0;
+    let successCount = 0;
 
-      // Airtableに登録（自動承認）
-      const reviewId = await uploadReview(review, site.id, true);
+    for (const site of targetSites) {
+      console.log(`\n🎯 ${site.name} に口コミを投稿中...`);
+      console.log(`   カテゴリ: ${site.category}, タイプ: ${site.rating.type}`);
 
-      if (reviewId) {
-        console.log(`    ✅ 登録成功`);
-        successCount++;
-      } else {
-        console.log(`    ❌ 登録失敗`);
+      for (let i = 0; i < site.reviewsToPost; i++) {
+        const review = await generateReviewByRating(site.name, site.rating, site.category, allReviews);
+
+        console.log(`  ${i + 1}/${site.reviewsToPost}: [${review.rating}★] ${review.title}`);
+
+        // Airtableに登録（自動承認）
+        const reviewId = await uploadReview(review, site.id, true);
+
+        if (reviewId) {
+          console.log(`    ✅ 登録成功`);
+          successCount++;
+
+          // 使用済みIDを記録（重複防止）
+          if (review.id) {
+            await recordUsedReviewId(site.name, review.id);
+          }
+        } else {
+          console.log(`    ❌ 登録失敗`);
+        }
+
+        totalReviews++;
+
+        // レート制限を避けるため待機
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
+    }
 
-      totalReviews++;
+    grandTotalReviews += totalReviews;
+    grandSuccessCount += successCount;
 
-      // レート制限を避けるため待機
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log(`\n✅ ラウンド ${round}/${rounds} 完了`);
+    console.log(`📊 ラウンド結果:`);
+    console.log(`  対象サイト: ${targetSites.length}サイト`);
+    console.log(`  投稿口コミ: ${totalReviews}件`);
+    console.log(`  成功: ${successCount}件`);
+    console.log(`  失敗: ${totalReviews - successCount}件`);
+
+    // 次のラウンドまで待機（最後のラウンドは待機不要）
+    if (round < rounds) {
+      const waitSeconds = 10;
+      console.log(`\n⏳ 次のラウンドまで${waitSeconds}秒待機...\n`);
+      await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
     }
   }
 
-  console.log('\n\n✅ 毎日の口コミ投稿完了\n');
-  console.log('📊 結果サマリー:');
-  console.log(`  対象サイト: ${targetSites.length}サイト`);
-  console.log(`  投稿口コミ: ${totalReviews}件`);
-  console.log(`  成功: ${successCount}件`);
-  console.log(`  失敗: ${totalReviews - successCount}件`);
+  console.log('\n\n' + '='.repeat(60));
+  console.log('✅ 全ラウンドの口コミ投稿完了');
+  console.log('='.repeat(60));
+  console.log('\n📊 最終結果サマリー:');
+  console.log(`  実行ラウンド: ${rounds}回`);
+  console.log(`  総投稿口コミ: ${grandTotalReviews}件`);
+  console.log(`  総成功: ${grandSuccessCount}件`);
+  console.log(`  総失敗: ${grandTotalReviews - grandSuccessCount}件`);
 }
 
 // 実行
