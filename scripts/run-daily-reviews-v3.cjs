@@ -620,8 +620,8 @@ async function main() {
   const maliciousSites = loadMaliciousSites();
   console.log(`✅ 悪質サイト: ${maliciousSites.length}件\n`);
 
-  // 環境変数でラウンド数を制御（デフォルト: 2ラウンド）
-  const rounds = parseInt(process.env.REVIEW_ROUNDS || '2', 10);
+  // 環境変数でラウンド数を制御（デフォルト: 1ラウンド）
+  const rounds = parseInt(process.env.REVIEW_ROUNDS || '1', 10);
 
   let grandTotalReviews = 0;
   let grandSuccessCount = 0;
