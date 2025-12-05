@@ -301,42 +301,44 @@ node scripts/update-categories-to-chuo.cjs
 
 ---
 
-## 管理画面
+## 管理方法（Airtableで一元管理）
 
-### 統合管理ダッシュボード（/admin/dashboard）⭐NEW
+### ⭐ 全ての管理はAirtableで実施
 
-**Airtableリアルタイム同期対応**の統一管理インターフェース
+**管理画面を廃止し、Airtableで直接管理します**
 
-#### 📊 統計情報タブ
-- 悪質サイト数の表示
-- ⭐5口コミ数の表示
-- Airtable同期ステータス
-- 管理ガイド
+**Airtable URL:**
+- https://airtable.com/appwdYkA3Fptn9TtN
 
-#### ❌ 悪質サイト管理タブ
-- 悪質サイトの追加・削除
-- サイト名検索機能
-- リアルタイムでAirtableと同期
-- `scripts/config/site-ratings.json`と連動
+### 主な管理タスク
 
-#### ⭐ ⭐5口コミ修正タブ
-- ⭐5口コミの一括検索
-- ワンクリックで⭐4に変更
-- Airtableに即座に反映
-- 修正件数の表示
+#### 1. サイト品質の設定
+1. `Sites` テーブルを開く
+2. `SiteQuality` 列をクリック
+3. ドロップダウンから選択:
+   - `excellent` - 優良サイト（投稿確率100%・毎日）
+   - `normal` - 通常サイト（投稿確率33%・3日に1回）
+   - `malicious` - 悪質サイト（投稿確率20%・5日に1回）
 
-**アクセス:**
-- URL: https://frabjous-taiyaki-460401.netlify.app/admin/dashboard
+#### 2. サイトの承認/却下
+1. `Sites` テーブルを開く
+2. `IsApproved = FALSE` でフィルター
+3. `IsApproved` チェックボックスをクリック → 承認
+4. または、レコードを削除 → 却下
 
----
+#### 3. カテゴリの変更
+1. `Sites` テーブルを開く
+2. `Category` 列をクリック
+3. ドロップダウンから選択:
+   - `chuo` - 中央競馬
+   - `nankan` - 南関競馬
+   - `chihou` - 地方競馬
 
-### サイト承認画面（/admin/pending-sites）
-
-**重要な変更点:**
-- カテゴリ選択が**必須**（中央競馬/南関競馬/地方競馬）
-- 「その他」は選択不可
-- 未選択時はアラート表示
-- 承認時にカテゴリが自動更新
+#### 4. 口コミの承認/削除
+1. `Reviews` テーブルを開く
+2. `IsApproved = FALSE` でフィルター
+3. `IsApproved` チェックボックスをクリック → 承認
+4. または、レコードを削除 → 削除
 
 ---
 
@@ -538,6 +540,14 @@ node scripts/update-categories-to-chuo.cjs
    - **管理方法**: Airtableで直接ドロップダウンから選択
    - **投稿確率**: excellent=100%, normal=33%, malicious=20%
    - **効果**: 手動CLIツール不要、Webから簡単管理可能
+
+2. ✅ **Web管理画面の完全廃止**
+   - `/admin/` 配下の全ページを削除
+   - `/api/admin/` エンドポイントを削除
+   - `AdminDashboard.tsx` を削除
+   - `SiteQualityManager.tsx` を削除
+   - **理由**: 管理画面が動作せず、Airtableで十分
+   - **効果**: メンテナンスコスト削減、管理が確実に動作
 
 ### 2025-12-04（夜）
 
