@@ -10,18 +10,19 @@ const [sites, latestReviews] = await Promise.all([
   getLatestReviews(6)
 ]);
 
-// ランキングスコアを計算してソート（ランキングページと同じロジック）
-const sitesWithRankingScore = sites.map(site => ({
-  ...site,
-  rankingScore: (site.average_rating || 0) * Math.log(site.review_count + 1) * 10
-}));
+// DisplayPriority順でソート（降順）、同じ優先度の場合はCreatedAt順（降順）
+sites.sort((a, b) => {
+  // DisplayPriorityで降順ソート
+  const priorityDiff = (b.display_priority || 50) - (a.display_priority || 50);
+  if (priorityDiff !== 0) return priorityDiff;
 
-// ランキングスコア順にソート（高い順）
-sitesWithRankingScore.sort((a, b) => b.rankingScore - a.rankingScore);
+  // 同じ優先度の場合、作成日時で降順ソート
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+});
 
 // カテゴリ別にサイトをグループ化
 const categories = ['nankan', 'chuo', 'chihou'] as const;
-const topSites = sitesWithRankingScore.slice(0, 10);
+const topSites = sites.slice(0, 10);
 
 // 構造化データ（WebSiteスキーマ強化版）
 const siteUrl = import.meta.env.SITE_URL || 'https://keiba-review.com';
