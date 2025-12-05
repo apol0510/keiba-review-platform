@@ -31,9 +31,9 @@ async function checkNewReviews() {
 
     // Airtableから承認済みの新規口コミを検索
     const records = await base('Reviews').select({
-      filterByFormula: `AND({IsApproved} = TRUE(), IS_AFTER({Created}, "${yesterdayStr}"))`,
+      filterByFormula: `AND({IsApproved} = TRUE(), IS_AFTER({CreatedAt}, "${yesterdayStr}"))`,
       maxRecords: 10,
-      fields: ['Site', 'UserName', 'Rating', 'Created']
+      fields: ['Site', 'UserName', 'Rating', 'CreatedAt']
     }).all();
 
     console.log(`\n📊 検索結果: ${records.length}件の新規口コミ`);
@@ -44,7 +44,7 @@ async function checkNewReviews() {
         const siteName = record.get('Site') ? record.get('Site')[0] : '不明';
         const userName = record.get('UserName') || '匿名';
         const rating = record.get('Rating') || 0;
-        const created = record.get('Created') || '';
+        const created = record.get('CreatedAt') || '';
         console.log(`  ${index + 1}. ${siteName} - ${userName} (⭐${rating}) - ${created}`);
       });
 
