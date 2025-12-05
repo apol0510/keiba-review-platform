@@ -15,8 +15,15 @@ const sitesWithScore = allSites.map(site => ({
   rankingScore: (site.average_rating || 0) * Math.log(site.review_count + 1) * 10
 }));
 
-// デフォルトはランキングスコア順
-sitesWithScore.sort((a, b) => b.rankingScore - a.rankingScore);
+// DisplayPriority順でソート（降順）、同じ優先度の場合はCreatedAt順（降順）
+sitesWithScore.sort((a, b) => {
+  // DisplayPriorityで降順ソート
+  const priorityDiff = (b.display_priority || 50) - (a.display_priority || 50);
+  if (priorityDiff !== 0) return priorityDiff;
+
+  // 同じ優先度の場合、作成日時で降順ソート
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+});
 
 const breadcrumbItems = [{ label: 'サイト一覧' }];
 ---
