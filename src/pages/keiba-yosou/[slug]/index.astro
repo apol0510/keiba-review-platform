@@ -381,7 +381,7 @@ if (isCategory) {
   <BaseLayout
     title={`${siteData.site.name}の口コミ・評判`}
     description={siteData.metaDescription}
-    ogImage={`/og/${siteData.site.slug}.png`}
+    ogImage="/og/default.png"
   >
     <script type="application/ld+json" set:html={JSON.stringify(siteData.structuredData)} />
     {siteData.breadcrumbStructuredData && (
