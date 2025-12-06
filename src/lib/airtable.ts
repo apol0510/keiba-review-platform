@@ -92,6 +92,12 @@ export interface Review {
   status: ReviewStatus;
   createdAt: string;
   created_at?: string; // snake_caseエイリアス（オプション）
+  helpfulCount?: number;
+  helpful_count?: number; // snake_caseエイリアス（オプション）
+}
+
+export interface ReviewWithSite extends Review {
+  siteSlug: string;
 }
 
 // サイト取得関数
@@ -276,7 +282,9 @@ export async function getReviewsBySite(siteId: string): Promise<Review[]> {
     content: record.fields.Content as string,
     status: record.fields.IsApproved ? 'approved' : 'pending',
     createdAt: record.fields.CreatedAt as string,
-    created_at: record.fields.CreatedAt as string // snake_caseエイリアス
+    created_at: record.fields.CreatedAt as string, // snake_caseエイリアス
+    helpfulCount: (record.fields.HelpfulCount as number) || 0,
+    helpful_count: (record.fields.HelpfulCount as number) || 0 // snake_caseエイリアス
   }));
 }
 
@@ -313,7 +321,9 @@ export async function getApprovedReviewsBySite(siteId: string): Promise<Review[]
     content: record.fields.Content as string,
     status: 'approved' as ReviewStatus,
     createdAt: record.fields.CreatedAt as string,
-    created_at: record.fields.CreatedAt as string // snake_caseエイリアス
+    created_at: record.fields.CreatedAt as string, // snake_caseエイリアス
+    helpfulCount: (record.fields.HelpfulCount as number) || 0,
+    helpful_count: (record.fields.HelpfulCount as number) || 0 // snake_caseエイリアス
   }));
 
   // キャッシュに保存
@@ -342,7 +352,9 @@ export async function getPendingReviews(): Promise<Review[]> {
     content: record.fields.Content as string,
     status: 'pending',
     createdAt: record.fields.CreatedAt as string,
-    created_at: record.fields.CreatedAt as string // snake_caseエイリアス
+    created_at: record.fields.CreatedAt as string, // snake_caseエイリアス
+    helpfulCount: (record.fields.HelpfulCount as number) || 0,
+    helpful_count: (record.fields.HelpfulCount as number) || 0 // snake_caseエイリアス
   }));
 }
 
@@ -519,7 +531,9 @@ export async function getLatestReviews(limit: number = 10): Promise<ReviewWithSi
         content: record.fields.Content as string,
         status: 'approved' as ReviewStatus,
         createdAt: record.fields.CreatedAt as string,
-        created_at: record.fields.CreatedAt as string // snake_caseエイリアス
+        created_at: record.fields.CreatedAt as string, // snake_caseエイリアス
+        helpfulCount: (record.fields.HelpfulCount as number) || 0,
+        helpful_count: (record.fields.HelpfulCount as number) || 0 // snake_caseエイリアス
       };
     })
   );
