@@ -1,0 +1,48 @@
+---
+import StarRating from './StarRating.astro';
+import HelpfulButton from './HelpfulButton';
+import type { Review } from '../lib/airtable';
+
+interface Props {
+  review: Review;
+}
+
+const { review } = Astro.props;
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+const displayDate = review.created_at || review.createdAt || '';
+const displayUsername = review.username || 'anonymous';
+const helpfulCount = (review.helpful_count || review.helpfulCount || 0) as number;
+---
+
+<div class="bg-white rounded-xl shadow-lg p-5 md:p-6 border border-slate-100">
+  <div class="flex items-start justify-between mb-3">
+    <div class="flex-1">
+      <StarRating rating={review.rating} size="sm" />
+      <h4 class="font-bold text-gray-900 mt-2 text-base md:text-lg">{review.title}</h4>
+    </div>
+    <span class="text-xs md:text-sm text-gray-500 whitespace-nowrap ml-2">{formatDate(displayDate)}</span>
+  </div>
+
+  <p class="text-gray-700 text-sm md:text-base leading-relaxed mb-4">
+    {review.content}
+  </p>
+
+  <div class="flex items-center gap-2 text-xs md:text-sm text-gray-600 mb-4">
+    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+      {displayUsername.charAt(0).toUpperCase()}
+    </div>
+    <span class="font-medium">{displayUsername}</span>
+  </div>
+
+  <!-- Helpful Button -->
+  <HelpfulButton reviewId={review.id} initialCount={helpfulCount} client:load />
+</div>

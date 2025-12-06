@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import StarRating from '../../../components/StarRating.astro';
 import CategoryBadge from '../../../components/CategoryBadge.astro';
 import ReviewCard from '../../../components/ReviewCard.astro';
+import ReviewItem from '../../../components/ReviewItem.astro';
 import SiteCard from '../../../components/SiteCard.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import ReviewForm from '../../../components/ReviewForm';
@@ -547,7 +548,7 @@ if (isCategory) {
               siteData.reviews.length > 0 ? (
                 <div class="space-y-4">
                   {siteData.reviews.map((review) => (
-                    <ReviewCard review={review} />
+                    <ReviewItem review={review} />
                   ))}
                 </div>
               ) : (
