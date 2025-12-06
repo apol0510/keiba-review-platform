@@ -116,14 +116,26 @@ export default function ReviewForm({ siteId, siteName, recaptchaSiteKey }: Props
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '投稿に失敗しました');
+        let errorMessage = '投稿に失敗しました';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          if (errorData.details) {
+            console.error('API Error Details:', errorData.details);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
+      const result = await response.json();
+      console.log('Review submitted successfully:', result);
       setSubmitSuccess(true);
     } catch (error) {
       console.error('Submit error:', error);
-      setSubmitError('投稿に失敗しました。しばらく経ってからもう一度お試しください。');
+      const errorMessage = error instanceof Error ? error.message : '投稿に失敗しました';
+      setSubmitError(`${errorMessage}。しばらく経ってからもう一度お試しください。`);
     } finally {
       setIsSubmitting(false);
     }
