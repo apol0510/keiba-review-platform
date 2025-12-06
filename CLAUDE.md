@@ -564,6 +564,34 @@ node scripts/update-categories-to-chuo.cjs
 
 ## 作業履歴
 
+### 2025-12-06
+
+1. ✅ **自動検証システム実装**（GitHub Actions統合）
+   - **目的**: 朝の目視チェックを不要にし、バグ・データ不整合を自動検出
+   - **スクリプト**: `scripts/verify-daily-execution.cjs`（380行）
+   - **検証内容**:
+     - 今日の口コミがAirtableに実際に登録されているか
+     - SiteQualityフィールドの整合性（excellent/normal/malicious）
+     - 優良サイトの評価範囲（⭐3-4のみ）
+     - 悪質サイトの評価範囲（⭐1-3のみ）
+     - ⭐5が使用されていないか
+   - **エラー管理**:
+     - 重要度レベル: CRITICAL / WARNING / INFO
+     - カテゴリ: DATA_CONSISTENCY / SITEQUALITY / RATING_VIOLATION / COUNT_MISMATCH
+     - 詳細なエラーレポート生成
+     - 推奨対応策の自動表示
+   - **GitHub Actions統合**:
+     - `.github/workflows/auto-post-reviews.yml` を更新
+     - 毎日の口コミ投稿後に自動検証を実行
+     - 検証失敗時はワークフロー全体を失敗させる（`continue-on-error: false`）
+     - 成功/失敗の明確な通知
+   - **効果**: 「成功」と表示されても実際には成功していない問題を防止
+
+2. ✅ **テスト口コミ削除スクリプト作成**
+   - `scripts/delete-test-review.cjs` - テスト投稿を検索・削除
+   - 「テスト投稿 - 削除してください」（テストユーザー123）を削除
+   - Airtableから正常に削除完了
+
 ### 2025-12-05
 
 1. ✅ **サイト品質管理のAirtable一元化**
