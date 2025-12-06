@@ -56,10 +56,24 @@ async function verifyTodayReviews() {
       maxRecords: 500
     }).all();
 
-    // 今日の口コミをフィルター
+    // 今日の口コミをフィルター（テスト投稿を除外）
     const todaysReviews = allReviews.filter(r => {
       const createdAt = r.fields.CreatedAt;
       if (!createdAt) return false;
+
+      // テスト投稿を除外
+      const title = r.fields.Title || '';
+      const userName = r.fields.UserName || '';
+      const content = r.fields.Content || '';
+      const isTestReview =
+        title.includes('テスト') ||
+        userName.includes('テスト') ||
+        content.includes('これはテスト投稿です');
+
+      if (isTestReview) {
+        console.log(`   ⏭️  テスト投稿をスキップ: ${title}`);
+        return false;
+      }
 
       // UTC → JST変換
       const createdDate = new Date(createdAt);
