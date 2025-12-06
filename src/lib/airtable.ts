@@ -1,15 +1,37 @@
 import Airtable from 'airtable';
 
-// Airtable設定
-const AIRTABLE_API_KEY = import.meta.env.AIRTABLE_API_KEY || process.env.AIRTABLE_API_KEY;
-const AIRTABLE_BASE_ID = import.meta.env.AIRTABLE_BASE_ID || process.env.AIRTABLE_BASE_ID;
+// Airtable設定（遅延評価でクライアントサイドエラーを回避）
+function getAirtableCredentials() {
+  const AIRTABLE_API_KEY = import.meta.env.AIRTABLE_API_KEY || process.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = import.meta.env.AIRTABLE_BASE_ID || process.env.AIRTABLE_BASE_ID;
 
-if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-  throw new Error('AIRTABLE_API_KEY and AIRTABLE_BASE_ID must be set');
+  // クライアントサイドでは環境変数が存在しないため、エラーを投げない
+  if (typeof window !== 'undefined') {
+    return { apiKey: '', baseId: '' };
+  }
+
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+    throw new Error('AIRTABLE_API_KEY and AIRTABLE_BASE_ID must be set');
+  }
+
+  return { apiKey: AIRTABLE_API_KEY, baseId: AIRTABLE_BASE_ID };
 }
 
-// Airtableクライアント初期化
-const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
+// Airtableクライアント初期化（遅延評価）
+let _base: ReturnType<ReturnType<typeof Airtable>['base']> | null = null;
+
+function getBase() {
+  if (!_base) {
+    const { apiKey, baseId } = getAirtableCredentials();
+    if (apiKey && baseId) {
+      _base = new Airtable({ apiKey }).base(baseId);
+    }
+  }
+  return _base!;
+}
+
+// サーバーサイドでのみbaseを初期化
+const base = typeof window === 'undefined' ? getBase() : ({} as any);
 
 // 強力なメモリキャッシュ（30分間有効 - SSGモードでは実質永続）
 const cache = new Map<string, { data: any; timestamp: number }>();
@@ -30,10 +52,11 @@ function setCache(key: string, data: any): void {
 
 // Airtable設定を取得する関数（互換性のため）
 export async function getAirtableConfig() {
+  const { apiKey, baseId } = getAirtableCredentials();
   return {
     isDemoMode: false,
-    apiKey: AIRTABLE_API_KEY,
-    baseId: AIRTABLE_BASE_ID
+    apiKey,
+    baseId
   };
 }
 

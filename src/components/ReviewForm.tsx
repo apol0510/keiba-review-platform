@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { reviewSchema, type ReviewFormData } from '../lib/validation';
-import { submitReview } from '../lib/airtable';
 
 declare global {
   interface Window {
@@ -93,19 +92,33 @@ export default function ReviewForm({ siteId, siteName, recaptchaSiteKey }: Props
         }
       }
 
-      // 口コミを投稿
-      const review = await submitReview({
-        site_id: siteId,
-        user_name: data.user_name,
-        user_email: data.user_email,
-        rating: data.rating,
-        title: data.title,
-        content: data.content,
-        // 料金情報（任意）
-        pricing_type: data.pricing_type,
-        has_free_trial: data.has_free_trial,
-        registration_required: data.registration_required,
+      // 口コミを投稿（APIエンドポイント経由）
+      const response = await fetch('/api/reviews/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          site_id: siteId,
+          user_name: data.user_name,
+          user_email: data.user_email,
+          rating: data.rating,
+          title: data.title,
+          content: data.content,
+          // 料金情報（任意）
+          pricing_type: data.pricing_type,
+          has_free_trial: data.has_free_trial,
+          registration_required: data.registration_required,
+          // 詳細評価（任意）
+          accuracy_rating: data.accuracy_rating,
+          price_rating: data.price_rating,
+          support_rating: data.support_rating,
+          transparency_rating: data.transparency_rating,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '投稿に失敗しました');
+      }
 
       setSubmitSuccess(true);
     } catch (error) {

@@ -43,6 +43,6 @@ const helpfulCount = (review.helpful_count || review.helpfulCount || 0) as numbe
     <span class="font-medium">{displayUsername}</span>
   </div>
 
-  <!-- Helpful Button -->
-  <HelpfulButton reviewId={review.id} initialCount={helpfulCount} client:load />
+  <!-- Helpful Button (一時的に無効化 - Airtableにフィールド追加後に有効化) -->
+  <!-- <HelpfulButton reviewId={review.id} initialCount={helpfulCount} client:load /> -->
 </div>
