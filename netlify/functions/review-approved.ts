@@ -54,25 +54,36 @@ async function sendApprovalEmail(
   `;
 
   try {
+    const requestBody = {
+      personalizations: [{ to: [{ email: userEmail }] }],
+      from: { email: SENDGRID_FROM_EMAIL },
+      subject: '口コミが公開されました - 競馬予想サイト口コミプラットフォーム',
+      content: [{ type: 'text/html', value: html }],
+    };
+
+    console.log('SendGridリクエスト詳細:');
+    console.log('  From:', SENDGRID_FROM_EMAIL);
+    console.log('  To:', userEmail);
+    console.log('  Subject:', requestBody.subject);
+
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${SENDGRID_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: userEmail }] }],
-        from: { email: SENDGRID_FROM_EMAIL },
-        subject: '口コミが公開されました - 競馬予想サイト口コミプラットフォーム',
-        content: [{ type: 'text/html', value: html }],
-      }),
+      body: JSON.stringify(requestBody),
     });
+
+    console.log('SendGridレスポンス:', response.status, response.statusText);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ SendGridエラー:', errorText);
+      console.error('❌ メール送信失敗: ステータス', response.status);
     } else {
       console.log(`✅ 承認通知メール送信成功: ${userEmail}`);
+      console.log('✅ SendGrid 202 Accepted - メールは送信キューに追加されました');
     }
   } catch (error) {
     console.error('❌ メール送信エラー:', error);
