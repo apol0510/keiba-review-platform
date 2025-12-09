@@ -1,0 +1,43 @@
+name: Auto Screenshot Capture
+
+on:
+  # 毎日午前4時（JST）に実行
+  schedule:
+    - cron: '0 19 * * *' # UTC 19:00 = JST 04:00
+
+  # 手動実行も可能
+  workflow_dispatch:
+
+jobs:
+  capture-screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install puppeteer airtable cloudinary
+
+      - name: Run screenshot capture
+        env:
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: |
+          node scripts/auto-capture-screenshots.cjs
+
+      - name: Send notification on failure
+        if: failure()
+        run: |
+          echo "❌ スクリーンショット取得に失敗しました"
+          echo "GitHub Actionsのログを確認してください"
