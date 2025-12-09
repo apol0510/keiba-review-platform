@@ -454,45 +454,75 @@ async function generateReviewByRating(siteName, rating, category, allReviews) {
 
   // より自然なユーザー名パターンを複数用意
   const usernamePatterns = [
-    // パターン1: 一般的な名前風（40%）
+    // パターン1: 実在しそうなフルネーム（15%）
     () => {
-      const firstNames = ['太郎', '次郎', '三郎', '花子', '愛', '健', '誠', '優', '拓', '翔', '陽', '凛', '葵', '蓮'];
-      const lastNames = ['田中', '佐藤', '鈴木', '高橋', '伊藤', '渡辺', '山本', '中村', '小林', '加藤'];
+      const firstNames = ['太郎', '浩介', '健太', '翔太', '大輔', '拓也', '裕也', '和也', '隆', '誠', '優', '陽介', '幸一', '修', '勇'];
+      const lastNames = ['佐々木', '田中', '佐藤', '鈴木', '高橋', '伊藤', '渡辺', '山本', '中村', '小林', '加藤', '山田', '中島', '吉田', '斎藤'];
       const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
       const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const number = Math.floor(Math.random() * 1000);
-      return Math.random() > 0.5 ? `${lastName}${firstName}${number}` : `${firstName}${number}`;
+      return `${lastName}${firstName}`;
     },
 
-    // パターン2: ニックネーム風（30%）
+    // パターン2: 名字のみ（10%）
+    () => {
+      const lastNames = ['佐々木', '田中', '佐藤', '鈴木', '高橋', '伊藤', '渡辺', '山本', '中村', '小林', '加藤', '山田', '中島', '吉田', '斎藤', '松本', '井上', '木村', '林', '清水'];
+      return lastNames[Math.floor(Math.random() * lastNames.length)];
+    },
+
+    // パターン3: 名前のみ（10%）
+    () => {
+      const firstNames = ['太郎', '次郎', '三郎', '健太', '浩介', '翔太', '大輔', '拓也', '裕也', '和也', '隆', '誠', '優', '花子', '愛', '凛', '葵', '蓮', '陽菜', '結衣'];
+      return firstNames[Math.floor(Math.random() * firstNames.length)];
+    },
+
+    // パターン4: 匿名系（10%）
+    () => {
+      const anonymous = ['匿名', '匿名希望', '名無し', '通りすがり', 'ななし', '名無しさん'];
+      return anonymous[Math.floor(Math.random() * anonymous.length)];
+    },
+
+    // パターン5: 年代・職業（15%）
+    () => {
+      const patterns = [
+        '20代会社員', '30代会社員', '40代会社員', '50代会社員', '60代男性',
+        '30代男性', '40代男性', '50代男性', '20代男性',
+        '30代サラリーマン', '40代サラリーマン', '50代サラリーマン',
+        '30代OL', '40代主婦', '50代自営業', '60代自営業',
+        '20代学生', '大学生', '社会人1年目', '新社会人'
+      ];
+      return patterns[Math.floor(Math.random() * patterns.length)];
+    },
+
+    // パターン6: 地域（10%）
+    () => {
+      const regions = [
+        '東京在住', '大阪在住', '神奈川在住', '埼玉在住', '千葉在住',
+        '関東人', '関西人', '九州人', '北海道民', '東北人',
+        '東京の会社員', '大阪の会社員', '名古屋人', '福岡人'
+      ];
+      return regions[Math.floor(Math.random() * regions.length)];
+    },
+
+    // パターン7: 趣味・経験年数（15%）
+    () => {
+      const hobbies = [
+        '週末の競馬ファン', '競馬歴10年', '競馬歴5年', '競馬歴20年',
+        'ベテラン馬券師', '競馬初心者', '競馬好き', '馬券生活',
+        '週末ギャンブラー', '競馬ファン歴3年', '10年目のベテラン',
+        '競馬一筋', '毎週競馬場', '馬券研究家', '予想好き'
+      ];
+      return hobbies[Math.floor(Math.random() * hobbies.length)];
+    },
+
+    // パターン8: シンプルなニックネーム（15%）
     () => {
       const nicknames = [
-        'ケイバ太郎', 'うまうま', 'ウマ好き', 'ターフの達人', 'けいば次郎',
-        'うまっち', 'ケイバ男', 'ケイバ女', 'うまきち', 'うまぞう',
-        'ギャンブラー', 'ベテランさん', '初心者くん', 'ラッキーボーイ',
-        '週末の戦士', 'サラリーマン', 'OL', '学生', 'フリーター',
-        'うまニート', 'けいば親父', 'うま子', 'けいば好き', 'ウマ太',
-        'うまみ', 'けいば郎', 'ウマ彦', 'けいば介', 'うま蔵'
+        'うまうま', 'ウマ好き', 'ターフの達人', 'うまっち', 'うまきち',
+        'ケイバ男', 'ケイバ女', 'うま子', 'けいば好き', 'ウマ太',
+        '競馬ファン', '馬券好き', '本命党', '穴党', 'ベテランさん',
+        '初心者くん', 'ラッキーボーイ', '週末の戦士', 'サラリーマン'
       ];
-      const nickname = nicknames[Math.floor(Math.random() * nicknames.length)];
-      const number = Math.floor(Math.random() * 1000);
-      return `${nickname}${number}`;
-    },
-
-    // パターン3: 競馬関連ワード（20%）
-    () => {
-      const words = ['競馬ファン', '馬券好き', '予想屋', 'ベテラン', '初心者', '本命党', '穴党'];
-      const word = words[Math.floor(Math.random() * words.length)];
-      const number = Math.floor(Math.random() * 1000);
-      return `${word}${number}`;
-    },
-
-    // パターン4: アルファベット混在（10%）
-    () => {
-      const prefixes = ['keiba', 'uma', 'turf', 'bet', 'race', 'win', 'lucky'];
-      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-      const number = Math.floor(Math.random() * 10000);
-      return `${prefix}${number}`;
+      return nicknames[Math.floor(Math.random() * nicknames.length)];
     }
   ];
 
@@ -502,13 +532,17 @@ async function generateReviewByRating(siteName, rating, category, allReviews) {
 
   // 重複しないユーザー名を生成（最大50回試行）
   while (usernameAttempts < maxUsernameAttempts) {
-    // パターンをランダムに選択（重み付け）
+    // パターンをランダムに選択（重み付け: 合計100%）
     const rand = Math.random();
     let patternIndex;
-    if (rand < 0.4) patternIndex = 0;        // 40% - 一般的な名前
-    else if (rand < 0.7) patternIndex = 1;   // 30% - ニックネーム
-    else if (rand < 0.9) patternIndex = 2;   // 20% - 競馬関連
-    else patternIndex = 3;                    // 10% - アルファベット
+    if (rand < 0.15) patternIndex = 0;        // 15% - 実在しそうなフルネーム
+    else if (rand < 0.25) patternIndex = 1;   // 10% - 名字のみ
+    else if (rand < 0.35) patternIndex = 2;   // 10% - 名前のみ
+    else if (rand < 0.45) patternIndex = 3;   // 10% - 匿名系
+    else if (rand < 0.60) patternIndex = 4;   // 15% - 年代・職業
+    else if (rand < 0.70) patternIndex = 5;   // 10% - 地域
+    else if (rand < 0.85) patternIndex = 6;   // 15% - 趣味・経験年数
+    else patternIndex = 7;                     // 15% - シンプルなニックネーム
 
     const candidate = usernamePatterns[patternIndex]();
 
