@@ -39,7 +39,7 @@ async function captureAndUpload(browser, recordId, url, slug) {
   try {
     console.log(`📸 ${slug}: ${url}`);
 
-    // スクリーンショット取得
+    // スクリーンショット取得（高解像度で取得）
     await page.setViewport({ width: 1200, height: 800 });
     await page.goto(url, {
       waitUntil: 'networkidle2',
@@ -53,14 +53,24 @@ async function captureAndUpload(browser, recordId, url, slug) {
       clip: { x: 0, y: 0, width: 1200, height: 800 },
     });
 
-    // Cloudinaryにアップロード
+    // Cloudinaryにアップロード（自動で400x300 WebPに変換）
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'keiba-review-screenshots',
           public_id: slug,
           overwrite: true,
-          resource_type: 'image'
+          resource_type: 'image',
+          // 画像変換設定
+          transformation: [
+            {
+              width: 400,
+              height: 300,
+              crop: 'fill',
+              quality: 'auto:good',
+              fetch_format: 'webp'
+            }
+          ]
         },
         (error, result) => {
           if (error) reject(error);
