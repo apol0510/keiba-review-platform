@@ -158,16 +158,18 @@ export const handler: Handler = async (event) => {
 
     const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
 
-    // 最近承認された口コミ（過去1分以内）を取得
-    const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
+    // 最近承認された口コミ（過去5分以内）を取得
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
     console.log('📝 最近承認された口コミを検索中...');
+    console.log('検索条件: 過去5分以内に作成され、承認済みの口コミ');
+    console.log('基準時刻:', fiveMinutesAgo);
 
     const records = await base('Reviews')
       .select({
         filterByFormula: `AND(
           {IsApproved} = TRUE(),
-          IS_AFTER({CreatedAt}, '${oneMinuteAgo}')
+          IS_AFTER({CreatedAt}, '${fiveMinutesAgo}')
         )`,
         maxRecords: 10,
         sort: [{ field: 'CreatedAt', direction: 'desc' }]
@@ -175,6 +177,13 @@ export const handler: Handler = async (event) => {
       .all();
 
     console.log(`📊 ${records.length}件の承認済み口コミを検出`);
+
+    // デバッグ: 検出されたレコードの詳細を表示
+    if (records.length > 0) {
+      records.forEach((record, index) => {
+        console.log(`  ${index + 1}. ID: ${record.id}, Created: ${record.fields.CreatedAt}, Approved: ${record.fields.IsApproved}`);
+      });
+    }
 
     let approvedCount = 0;
 
