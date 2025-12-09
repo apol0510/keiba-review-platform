@@ -159,7 +159,7 @@ export const handler: Handler = async (event) => {
         <p style="color: #666; font-size: 12px;">
           このメールは自動送信されています。返信はできません。<br>
           競馬予想サイト口コミプラットフォーム<br>
-          <a href="https://frabjous-taiyaki-460401.netlify.app">https://frabjous-taiyaki-460401.netlify.app</a>
+          <a href="https://keiba-review.jp">https://keiba-review.jp</a>
         </p>
       </div>
     `;

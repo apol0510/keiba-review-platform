@@ -546,9 +546,10 @@ node scripts/update-categories-to-chuo.cjs
 
 ## 本番環境
 
-- **URL**: https://frabjous-taiyaki-460401.netlify.app
-- **統合管理ダッシュボード**: https://frabjous-taiyaki-460401.netlify.app/admin/dashboard ⭐NEW
-- **サイト承認画面**: https://frabjous-taiyaki-460401.netlify.app/admin/pending-sites
+- **URL**: https://keiba-review.jp
+- **Netlify URL**: https://frabjous-taiyaki-460401.netlify.app (旧URL)
+- **統合管理ダッシュボード**: https://keiba-review.jp/admin/dashboard ⭐NEW
+- **サイト承認画面**: https://keiba-review.jp/admin/pending-sites
 - **GitHub**: https://github.com/apol0510/keiba-review-platform
 - **Airtable**: Base ID `appwdYkA3Fptn9TtN`
 
@@ -628,7 +629,7 @@ netlify env:list
 4. **アクション設定**
    - Action: 「Send a request to URL」(Webhook)
    - Method: **POST**
-   - URL: `https://frabjous-taiyaki-460401.netlify.app/.netlify/functions/review-approved`
+   - URL: `https://keiba-review.jp/.netlify/functions/review-approved`
    - Headers:
      ```
      Content-Type: application/json

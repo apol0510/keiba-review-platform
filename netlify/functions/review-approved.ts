@@ -36,7 +36,7 @@ async function sendApprovalEmail(
       </div>
 
       <p>
-        <a href="https://frabjous-taiyaki-460401.netlify.app/keiba-yosou/"
+        <a href="https://keiba-review.jp/keiba-yosou/"
            style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0;">
           サイトで確認する
         </a>
@@ -48,7 +48,7 @@ async function sendApprovalEmail(
       <p style="color: #666; font-size: 12px;">
         このメールは自動送信されています。返信はできません。<br>
         競馬予想サイト口コミプラットフォーム<br>
-        <a href="https://frabjous-taiyaki-460401.netlify.app">https://frabjous-taiyaki-460401.netlify.app</a>
+        <a href="https://keiba-review.jp">https://keiba-review.jp</a>
       </p>
     </div>
   `;
