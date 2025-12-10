@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getSitesWithStats } from '../lib/airtable';
 
-const SITE_URL = import.meta.env.SITE || 'https://frabjous-taiyaki-460401.netlify.app';
+const SITE_URL = import.meta.env.SITE || 'https://keiba-review.jp';
 
 export const GET: APIRoute = async () => {
   // 承認済みサイトを取得
