@@ -540,3 +540,61 @@ export async function getLatestReviews(limit: number = 10): Promise<ReviewWithSi
 
   return reviewsWithSite;
 }
+
+/**
+ * ランキングスコアを計算してソート
+ *
+ * すべてのランキング表示で統一的に使用する共通関数
+ *
+ * 計算ロジック:
+ * - 口コミ3件以上: 平均評価 × log10(口コミ数 + 1) × 100
+ * - 口コミ1-2件: 平均評価 × 口コミ数 × 10（参考順位）
+ * - 口コミ0件: スコア = 0（最下位）
+ *
+ * @param sites - ソート対象のサイト配列
+ * @returns ランキングスコア順にソートされたサイト配列
+ */
+export function sortByRankingScore<T extends { review_count?: number; average_rating?: number; created_at?: string }>(
+  sites: T[]
+): (T & { rankingScore: number; reviewCount: number })[] {
+  return sites
+    .map(site => {
+      const reviewCount = site.review_count || 0;
+      const avgRating = site.average_rating || 0;
+
+      // 口コミ数による重み付け
+      let rankingScore = 0;
+
+      if (reviewCount >= 3) {
+        // 口コミ3件以上: 正式ランキング
+        // スコア = 平均評価 × 口コミ数の対数 × 100
+        rankingScore = avgRating * Math.log10(reviewCount + 1) * 100;
+      } else if (reviewCount > 0) {
+        // 口コミ1-2件: 参考順位（スコアを大幅に下げる）
+        rankingScore = avgRating * reviewCount * 10;
+      }
+      // 口コミ0件: スコア = 0（最下位）
+
+      return {
+        ...site,
+        rankingScore,
+        reviewCount
+      };
+    })
+    .sort((a, b) => {
+      // ランキングスコア降順
+      const scoreDiff = b.rankingScore - a.rankingScore;
+      if (scoreDiff !== 0) return scoreDiff;
+
+      // スコアが同じ場合、口コミ数が多い方を優先
+      const reviewDiff = b.reviewCount - a.reviewCount;
+      if (reviewDiff !== 0) return reviewDiff;
+
+      // それでも同じ場合、作成日時が新しい方を優先
+      if (a.created_at && b.created_at) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+
+      return 0;
+    });
+}

@@ -1,52 +1,17 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
-import { getSitesWithStats, categoryLabels } from '../../lib/airtable';
+import { getSitesWithStats, sortByRankingScore, categoryLabels } from '../../lib/airtable';
 
 const category = 'chihou';
 const categoryLabel = categoryLabels[category];
 
 // カテゴリでフィルタ
-let sites = await getSitesWithStats();
-sites = sites.filter(site => site.category === category);
+const allSites = await getSitesWithStats();
+const categorySites = allSites.filter(site => site.category === category);
 
-// ランキングスコアを計算してソート
-sites = sites
-  .map(site => {
-    const reviewCount = site.review_count || 0;
-    const avgRating = site.average_rating || 0;
-
-    // 口コミ数による重み付け
-    let rankingScore = 0;
-
-    if (reviewCount >= 3) {
-      // 口コミ3件以上: 正式ランキング
-      // スコア = 平均評価 × 口コミ数の対数 × 100
-      rankingScore = avgRating * Math.log10(reviewCount + 1) * 100;
-    } else if (reviewCount > 0) {
-      // 口コミ1-2件: 参考順位（スコアを大幅に下げる）
-      rankingScore = avgRating * reviewCount * 10;
-    }
-    // 口コミ0件: スコア = 0（最下位）
-
-    return {
-      ...site,
-      rankingScore,
-      reviewCount
-    };
-  })
-  .sort((a, b) => {
-    // ランキングスコア降順
-    const scoreDiff = b.rankingScore - a.rankingScore;
-    if (scoreDiff !== 0) return scoreDiff;
-
-    // スコアが同じ場合、口コミ数が多い方を優先
-    const reviewDiff = b.reviewCount - a.reviewCount;
-    if (reviewDiff !== 0) return reviewDiff;
-
-    // それでも同じ場合、作成日時が新しい方を優先
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
+// ランキングスコアを計算してソート（共通関数を使用）
+const sites = sortByRankingScore(categorySites);
 
 // TOP 20のみ表示
 const topSites = sites.slice(0, 20);
