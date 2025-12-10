@@ -23,12 +23,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run daily reviews script (v3 - custom reviews)
+      - name: Run daily reviews script (v4 - 5 types support)
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
           REVIEW_ROUNDS: 1  # 自動実行では1ラウンドのみ（手動実行時は環境変数で変更可能）
-        run: node scripts/run-daily-reviews-v3.cjs
+        run: node scripts/run-daily-reviews-v4.cjs
 
       - name: Verify execution and data integrity
         env:
