@@ -1,15 +1,21 @@
 /**
  * スクリーンショット画像のURLを取得する
  * 優先順位:
- * 1. ローカル静的画像（/screenshots/slug.png）- 10サイトのみ
- * 2. thum.io（外部API）- 残りのサイト
- * 3. フォールバック（SVGプレースホルダー）- エラー時
+ * 1. ローカル静的画像（/screenshots/slug.webp）- Puppeteerで取得した92サイト
+ * 2. Cloudinary画像（直接URL）- Cloudinaryにアップロード済みのサイト
+ * 3. thum.io（外部API）- その他のサイト
+ * 4. フォールバック（SVGプレースホルダー）- エラー時
  */
 export function getScreenshotUrl(slug: string, externalUrl?: string): string {
   // ローカルスクリーンショットが存在する場合、それを優先（最速）
   // WebP形式で配信（600x400、85%品質、軽量）
   if (hasLocalScreenshot(slug)) {
     return `/screenshots/${slug}.webp`;
+  }
+
+  // CloudinaryのURLが提供されている場合は直接使用
+  if (externalUrl && externalUrl.includes('cloudinary.com')) {
+    return externalUrl;
   }
 
   // ローカル画像がない場合はthum.ioにフォールバック
